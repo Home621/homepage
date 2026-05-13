@@ -61,6 +61,55 @@
   .corner-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 
   #mute-btn { left:22px; display:none; }
+
+  #ranker-panel {
+    position:fixed; z-index:60;
+    top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(680px,92vw); max-height:85vh;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px;
+    backdrop-filter:blur(40px) saturate(0.6); -webkit-backdrop-filter:blur(40px) saturate(0.6);
+    display:none; flex-direction:column;
+    overflow:hidden;
+    box-shadow:0 8px 48px rgba(0,0,0,0.35);
+  }
+  #ranker-panel.open { display:flex; }
+
+  #ranker-titlebar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px 12px;
+    border-bottom:1px solid rgba(255,255,255,0.07);
+    cursor:move; user-select:none; flex-shrink:0;
+  }
+  #ranker-titlebar span { font-size:13px; font-weight:400; color:rgba(255,255,255,0.55); letter-spacing:0.06em; }
+  #ranker-close { background:none; border:none; color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; line-height:1; padding:0 2px; transition:color 0.15s; }
+  #ranker-close:hover { color:rgba(255,255,255,0.8); }
+  #ranker-body { display:flex; flex-direction:column; gap:14px; padding:18px; overflow-y:auto; flex:1; }
+  .r-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .r-label { font-size:11px; color:rgba(255,255,255,0.3); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:4px; }
+  .r-input { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:300; padding:8px 12px; outline:none; transition:border-color 0.2s; flex:1; min-width:0; }
+  .r-input:focus { border-color:rgba(255,255,255,0.28); }
+  .r-input::placeholder { color:rgba(255,255,255,0.18); }
+  .r-select { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:rgba(255,255,255,0.7); font-family:'DM Sans',sans-serif; font-size:13px; padding:8px 12px; outline:none; cursor:pointer; }
+  .r-select option { background:#111; }
+  .r-check-row { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .r-check-row input { accent-color:rgba(255,255,255,0.5); cursor:pointer; }
+  .r-check-row span { font-size:12px; color:rgba(255,255,255,0.45); }
+  .r-btn { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:8px; color:rgba(255,255,255,0.7); font-family:'DM Sans',sans-serif; font-size:13px; padding:8px 18px; cursor:pointer; transition:background 0.15s; white-space:nowrap; }
+  .r-btn:hover { background:rgba(255,255,255,0.14); color:#fff; }
+  .r-btn.danger { color:rgba(255,180,180,0.7); }
+  .r-btn.danger:hover { background:rgba(255,255,255,0.1); }
+  #ranker-progress-bar { height:2px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; }
+  #ranker-progress-fill { height:100%; width:0%; background:rgba(255,255,255,0.25); transition:width 0.3s; border-radius:2px; }
+  #ranker-status { font-size:11px; color:rgba(255,255,255,0.3); }
+  #ranker-results { display:flex; gap:14px; }
+  #ranker-output { flex:1; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:12px; font-size:12px; color:rgba(255,255,255,0.55); line-height:1.7; white-space:pre-wrap; word-break:break-word; max-height:220px; overflow-y:auto; font-family:monospace; }
+  #ranker-preview { width:130px; height:130px; border-radius:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); object-fit:cover; cursor:pointer; flex-shrink:0; display:none; }
+  #ranker-sidebar { display:flex; flex-direction:column; gap:8px; min-width:130px; }
+  .r-artist-btn { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:11px; padding:5px 10px; cursor:pointer; text-align:left; transition:background 0.15s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .r-artist-btn:hover { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.8); }
+  #ranker-copy-btn { font-size:11px; padding:6px 10px; margin-top:4px; }
   #eye-btn { position:fixed; bottom:62px; left:22px; z-index:10; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
   #eye-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
   #eye-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
@@ -204,6 +253,74 @@
 <button id="eye-btn" title="Toggle UI">
   <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
 </button>
+
+<button id="ranker-btn" style="position:fixed; right:22px; bottom:62px; z-index:10; display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; letter-spacing:0.06em; padding:7px 13px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; width:fit-content;">
+  <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+  Cool shit
+</button>
+
+<div id="ranker-panel">
+  <div id="ranker-titlebar">
+    <span>e621 Ranker</span>
+    <button id="ranker-close">×</button>
+  </div>
+  <div id="ranker-body">
+    <div>
+      <div class="r-label">Tags</div>
+      <div class="r-row">
+        <input class="r-input" id="r-tags" placeholder="e.g. canine score:>50" autocomplete="off"/>
+        <input class="r-input" id="r-topn" placeholder="Top N" value="10" style="max-width:70px;"/>
+      </div>
+    </div>
+    <div>
+      <div class="r-label">Tag types</div>
+      <div class="r-row" id="r-types">
+        <label class="r-check-row"><input type="checkbox" value="artist" checked/><span>Artist</span></label>
+        <label class="r-check-row"><input type="checkbox" value="character"/><span>Character</span></label>
+        <label class="r-check-row"><input type="checkbox" value="copyright"/><span>Copyright</span></label>
+        <label class="r-check-row"><input type="checkbox" value="general"/><span>General</span></label>
+        <label class="r-check-row"><input type="checkbox" value="meta"/><span>Meta</span></label>
+      </div>
+    </div>
+    <div class="r-row">
+      <div>
+        <div class="r-label">Rating</div>
+        <select class="r-select" id="r-rating">
+          <option value="">Any</option>
+          <option value="rating:s">Safe</option>
+          <option value="rating:q">Questionable</option>
+          <option value="rating:e">Explicit</option>
+        </select>
+      </div>
+      <div>
+        <div class="r-label">Sort by</div>
+        <select class="r-select" id="r-sort">
+          <option value="count">Post count</option>
+          <option value="avg_score">Avg score</option>
+          <option value="sum_score">Total score</option>
+        </select>
+      </div>
+      <label class="r-check-row" style="margin-top:18px;">
+        <input type="checkbox" id="r-filter-fake" checked/>
+        <span>Filter fake artists</span>
+      </label>
+    </div>
+    <div class="r-row">
+      <button class="r-btn" id="r-search-btn">Search</button>
+      <button class="r-btn danger" id="r-stop-btn" style="display:none;">Stop</button>
+      <span id="ranker-status"></span>
+    </div>
+    <div id="ranker-progress-bar"><div id="ranker-progress-fill"></div></div>
+    <div id="ranker-results" style="display:none;">
+      <div id="ranker-output"></div>
+      <div id="ranker-sidebar">
+        <img id="ranker-preview" alt="preview"/>
+        <div id="r-artist-btns"></div>
+        <button class="r-btn r-artist-btn" id="ranker-copy-btn" style="display:none;">Copy results</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <button id="mute-btn" class="corner-btn" aria-label="Toggle mute">
   <svg id="mute-icon" viewBox="0 0 24 24">
@@ -850,6 +967,146 @@
     ui.style.pointerEvents = uiHidden ? 'none' : '';
     eyeBtn.querySelector('svg').innerHTML = uiHidden ? SVG_EYE_OFF : SVG_EYE_ON;
   });
+
+  // Ranker
+  const rankerPanel = document.getElementById('ranker-panel');
+  const rankerBtn   = document.getElementById('ranker-btn');
+  const rankerClose = document.getElementById('ranker-close');
+  const rSearchBtn  = document.getElementById('r-search-btn');
+  const rStopBtn    = document.getElementById('r-stop-btn');
+  const rStatus     = document.getElementById('ranker-status');
+  const rFill       = document.getElementById('ranker-progress-fill');
+  const rOutput     = document.getElementById('ranker-output');
+  const rResults    = document.getElementById('ranker-results');
+  const rPreview    = document.getElementById('ranker-preview');
+  const rArtistBtns = document.getElementById('r-artist-btns');
+  const rCopyBtn    = document.getElementById('ranker-copy-btn');
+  const FAKE_ARTISTS = new Set(['conditional_dnp','sound_warning','animated','webm','flash','no_sound','video','corrupt','commentary_request']);
+
+  rankerBtn.addEventListener('click', () => rankerPanel.classList.toggle('open'));
+  rankerClose.addEventListener('click', () => rankerPanel.classList.remove('open'));
+
+  // Draggable
+  let dragOffX = 0, dragOffY = 0, dragging = false;
+  const titlebar = document.getElementById('ranker-titlebar');
+  titlebar.addEventListener('mousedown', e => {
+    dragging = true;
+    const r = rankerPanel.getBoundingClientRect();
+    dragOffX = e.clientX - r.left; dragOffY = e.clientY - r.top;
+    rankerPanel.style.transform = 'none';
+    rankerPanel.style.left = r.left + 'px'; rankerPanel.style.top = r.top + 'px';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    rankerPanel.style.left = (e.clientX - dragOffX) + 'px';
+    rankerPanel.style.top  = (e.clientY - dragOffY) + 'px';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; });
+
+  let rankerStop = false;
+
+  rSearchBtn.addEventListener('click', async () => {
+    const user = localStorage.getItem(K.user);
+    const key  = localStorage.getItem(K.key);
+    if (!user || !key) { rStatus.textContent = 'No credentials — check settings.'; return; }
+
+    const tags     = document.getElementById('r-tags').value.trim();
+    const topN     = parseInt(document.getElementById('r-topn').value) || 10;
+    const rating   = document.getElementById('r-rating').value;
+    const sortMode = document.getElementById('r-sort').value;
+    const filterFake = document.getElementById('r-filter-fake').checked;
+    const types    = [...document.querySelectorAll('#r-types input:checked')].map(i => i.value);
+
+    let searchTags = tags;
+    if (types.includes('artist') && !searchTags.includes('-unknown_artist')) searchTags += ' -unknown_artist';
+    if (rating) searchTags += ' ' + rating;
+
+    const auth = 'Basic ' + btoa(user + ':' + key);
+    rankerStop = false;
+    rSearchBtn.style.display = 'none'; rStopBtn.style.display = '';
+    rResults.style.display = 'none'; rOutput.textContent = '';
+    rArtistBtns.innerHTML = ''; rPreview.style.display = 'none'; rCopyBtn.style.display = 'none';
+    rFill.style.width = '0%';
+
+    const counter = {}, scores = {};
+    let page = 1, totalPosts = 0, allPosts = [];
+
+    while (!rankerStop) {
+      rStatus.textContent = `Fetching page ${page}…`;
+      rFill.style.width = Math.min(page * 8, 90) + '%';
+      try {
+        const res = await fetch(`https://e621.net/posts.json?tags=${encodeURIComponent(searchTags)}&limit=320&page=${page}`, {
+          headers: { 'User-Agent': 'VivaldiStartpage/1.0', 'Authorization': auth }
+        });
+        if (!res.ok) break;
+        const data = await res.json();
+        const posts = data.posts || [];
+        if (!posts.length) break;
+        for (const post of posts) {
+          const score = post.score?.total || 0;
+          for (const type of types) {
+            for (const tag of (post.tags?.[type] || [])) {
+              if (type === 'artist' && filterFake && FAKE_ARTISTS.has(tag)) continue;
+              counter[tag] = (counter[tag] || 0) + 1;
+              if (!scores[tag]) scores[tag] = [];
+              scores[tag].push(score);
+            }
+          }
+          allPosts.push(post);
+        }
+        totalPosts += posts.length;
+        page++;
+        await new Promise(r => setTimeout(r, 1000));
+      } catch(e) { break; }
+    }
+
+    rFill.style.width = '100%';
+    rStatus.textContent = `Done — ${totalPosts} posts`;
+    rSearchBtn.style.display = ''; rStopBtn.style.display = 'none';
+
+    let sorted;
+    if (sortMode === 'count') sorted = Object.entries(counter).sort((a,b) => b[1]-a[1]);
+    else if (sortMode === 'avg_score') sorted = Object.entries(counter).sort((a,b) => (scores[b[0]].reduce((s,v)=>s+v,0)/scores[b[0]].length) - (scores[a[0]].reduce((s,v)=>s+v,0)/scores[a[0]].length));
+    else sorted = Object.entries(counter).sort((a,b) => scores[b[0]].reduce((s,v)=>s+v,0) - scores[a[0]].reduce((s,v)=>s+v,0));
+    sorted = sorted.slice(0, topN);
+
+    const lines = [
+      `Tags: ${searchTags}`,
+      `Posts: ${totalPosts}`,
+      `Top ${topN} (${sortMode}):\n`,
+      ...sorted.map(([tag, val]) => {
+        if (sortMode === 'count') return `${tag}: ${val} posts`;
+        const arr = scores[tag];
+        const v = sortMode === 'avg_score' ? arr.reduce((s,x)=>s+x,0)/arr.length : arr.reduce((s,x)=>s+x,0);
+        return `${tag}: ${v.toFixed(1)}`;
+      })
+    ];
+    rOutput.textContent = lines.join('\n');
+
+    const topArtists = sorted.filter(([t]) => types.includes('artist')).slice(0,5).map(([t])=>t);
+    rArtistBtns.innerHTML = '';
+    for (const artist of topArtists) {
+      const btn = document.createElement('button');
+      btn.className = 'r-artist-btn';
+      btn.textContent = artist.replace(/_/g,' ');
+      btn.addEventListener('click', () => window.open(`https://e621.net/posts?tags=${artist}`));
+      rArtistBtns.appendChild(btn);
+    }
+
+    const imgPost = allPosts.filter(p => ['jpg','jpeg','png'].includes(p.file?.ext?.toLowerCase()) && p.file?.url)
+      .sort((a,b) => (b.score?.total||0) - (a.score?.total||0)).slice(0,10)[Math.floor(Math.random()*10)] || null;
+    if (imgPost) {
+      rPreview.src = imgPost.file.url;
+      rPreview.style.display = 'block';
+      rPreview.onclick = () => window.open(`https://e621.net/posts/${imgPost.id}`);
+    }
+
+    rCopyBtn.style.display = '';
+    rCopyBtn.onclick = () => { navigator.clipboard.writeText(lines.join('\n')); rCopyBtn.textContent = 'Copied!'; setTimeout(()=>rCopyBtn.textContent='Copy results',1500); };
+    rResults.style.display = 'flex';
+  });
+
+  rStopBtn.addEventListener('click', () => { rankerStop = true; rStatus.textContent = 'Stopping…'; });
 
   window.addEventListener('load', () => { if (!isMobile) searchInput.focus(); });
 </script>
