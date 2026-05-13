@@ -380,7 +380,12 @@
 
     <div id="local-fields">
       <div class="field">
-        <label>Browse from disk</label>
+        <label>Wallpaper file path</label>
+        <input id="cfg-local-path" type="text" placeholder="C:\Users\You\Pictures\wallpaper (no extension)" autocomplete="off"/>
+        <span class="hint">Path to your wallpaper without extension. The page will try .mp4, .gif, .jpg, .png etc. automatically.</span>
+      </div>
+      <div class="field">
+        <label>Or browse from disk</label>
         <button id="local-browse-btn" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 14px;cursor:pointer;text-align:left;transition:background 0.15s;">Browse files...</button>
         <input id="local-browse-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4" style="display:none;"/>
       </div>
@@ -424,9 +429,8 @@
 </div>
 
 <script>
-  const BASE_LOCAL = 'file:///C:/Users/N3WKI/AppData/Local/Vivaldi/User%20Data/Default/Wallpapers/wallpaper';
   const LOCAL_EXTS = ['mp4','gif','jpg','jpeg','png','webp'];
-  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip' };
+  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', localPath:'viv_local_path' };
 
   const bgCur     = document.getElementById('bg');
   const bgPrev    = document.getElementById('bg-prev');
@@ -706,8 +710,10 @@
   }
 
   function tryLocalFile(i) {
+    const base = localStorage.getItem(K.localPath);
+    if (!base) return;
     if (i >= LOCAL_EXTS.length) return;
-    const ext = LOCAL_EXTS[i], url = BASE_LOCAL + '.' + ext;
+    const ext = LOCAL_EXTS[i], url = base.replace(/\\/g, '/').replace(/^([a-zA-Z]:)/, 'file:///$1') + '.' + ext;
     if (ext === 'mp4') {
       const v = bgVideo; v.src = url; v.load();
       v.oncanplay = () => showVideo(url);
@@ -771,6 +777,7 @@
     document.getElementById('cfg-tags').value = localStorage.getItem(K.tags) || '';
     document.getElementById('cfg-start-muted').checked = localStorage.getItem(K.startMuted) !== 'false';
     document.getElementById('cfg-auto-skip').checked = localStorage.getItem(K.autoSkip) !== 'false';
+    document.getElementById('cfg-local-path').value = localStorage.getItem(K.localPath) || '';
     document.getElementById('cfg-comments').checked = localStorage.getItem(K.commentsVisible) !== 'false';
     const sv = localStorage.getItem(K.volume) || '100';
     volSlider.value = sv; volVal.textContent = sv + '%';
@@ -807,6 +814,8 @@
       if (key)  localStorage.setItem(K.key, key);
       if (tags) localStorage.setItem(K.tags, tags);
     } else {
+      const path = document.getElementById('cfg-local-path').value.trim();
+      if (path) localStorage.setItem(K.localPath, path);
       sauceBtn.style.display = 'none';
       clearInterval(commentCycle); commentBox.style.display = 'none';
     }
