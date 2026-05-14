@@ -185,6 +185,23 @@
 
   #score-badge { position:fixed; top:22px; right:130px; z-index:10; display:none; align-items:center; gap:5px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; padding:5px 11px; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
   #score-badge #score-val { min-width:24px; text-align:center; }
+
+  .check-row input[type=checkbox], .r-check-row input[type=checkbox] {
+    appearance:none; -webkit-appearance:none;
+    width:15px; height:15px; border:1px solid rgba(255,255,255,0.25);
+    border-radius:4px; background:rgba(255,255,255,0.06);
+    cursor:pointer; position:relative; flex-shrink:0;
+    transition:background 0.15s, border-color 0.15s;
+  }
+  .check-row input[type=checkbox]:checked, .r-check-row input[type=checkbox]:checked {
+    background:rgba(255,255,255,0.75); border-color:rgba(255,255,255,0.6);
+  }
+  .check-row input[type=checkbox]:checked::after, .r-check-row input[type=checkbox]:checked::after {
+    content:''; position:absolute; left:4px; top:1px;
+    width:5px; height:9px;
+    border:2px solid #111; border-top:none; border-left:none;
+    transform:rotate(45deg);
+  }
   #rating-badge { font-size:10px; font-weight:400; padding:2px 5px; border-radius:4px; letter-spacing:0.06em; }
   #rating-badge.safe     { background:rgba(80,200,120,0.18); color:rgba(80,220,120,0.9); }
   #rating-badge.quest    { background:rgba(240,180,60,0.18);  color:rgba(240,190,60,0.9); }
@@ -193,11 +210,15 @@
   .score-mid  { color:rgba(240,190,60,0.9) !important; }
   .score-low  { color:rgba(240,90,90,0.9) !important; }
 
-  .pool-row { display:flex; gap:6px; align-items:center; }
-  .pool-input { flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; padding:7px 10px; outline:none; transition:border-color 0.2s; }
-  .pool-input:focus { border-color:rgba(255,255,255,0.35); }
+  .pool-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; }
+  .pool-name { width:100px; flex-shrink:0; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:400; padding:6px 10px; outline:none; transition:border-color 0.2s; }
+  .pool-name::placeholder { color:rgba(255,255,255,0.2); }
+  .pool-input { flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; padding:6px 10px; outline:none; transition:border-color 0.2s; min-width:0; }
+  .pool-input:focus, .pool-name:focus { border-color:rgba(255,255,255,0.35); }
   .pool-input::placeholder { color:rgba(255,255,255,0.2); }
-  .pool-del { background:none; border:none; color:rgba(255,255,255,0.3); cursor:pointer; font-size:16px; padding:0 4px; line-height:1; transition:color 0.15s; }
+  .pool-toggle { background:none; border:1px solid rgba(255,255,255,0.15); border-radius:5px; color:rgba(255,255,255,0.35); cursor:pointer; font-size:11px; padding:4px 8px; transition:all 0.15s; flex-shrink:0; font-family:'DM Sans',sans-serif; }
+  .pool-toggle.on { background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.3); color:rgba(255,255,255,0.8); }
+  .pool-del { background:none; border:none; color:rgba(255,255,255,0.25); cursor:pointer; font-size:16px; padding:0 4px; line-height:1; transition:color 0.15s; flex-shrink:0; }
   .pool-del:hover { color:rgba(255,255,255,0.7); }
 </style>
 </head>
@@ -252,6 +273,8 @@
 
 
 <div id="score-badge">
+  <span id="pool-badge" style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.05em;display:none;"></span>
+  <span id="pool-divider" style="opacity:0.25;font-size:10px;display:none;">|</span>
   <span id="artist-val" style="opacity:0.7;"></span>
   <span id="artist-divider" style="opacity:0.25;font-size:10px;">|</span>
   <span id="rating-badge"></span>
@@ -622,7 +645,12 @@
     const user = localStorage.getItem(K.user);
     const key  = localStorage.getItem(K.key);
     const pool = getActivePool();
-    const tags = pool || localStorage.getItem(K.tags) || 'score:>50';
+    const tags = pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50');
+    const poolBadge = document.getElementById('pool-badge');
+    const poolDivider = document.getElementById('pool-divider');
+    if (pool && pool.name) {
+      poolBadge.textContent = pool.name; poolBadge.style.display = ''; poolDivider.style.display = '';
+    } else { poolBadge.style.display = 'none'; poolDivider.style.display = 'none'; }
     if (!user || !key) { fallbackLocal(); return; }
     const auth = 'Basic ' + btoa(user + ':' + key);
 
@@ -801,8 +829,12 @@
     commentsVisible = document.getElementById('cfg-comments').checked;
     localStorage.setItem(K.commentsVisible, commentsVisible ? 'true' : 'false');
     applyCommentVisibility();
-    const inputs = poolsList.querySelectorAll('.pool-input');
-    savePools([...inputs].map(i => i.value.trim()).filter(Boolean));
+    const inputs = poolsList.querySelectorAll('.pool-row');
+    savePools([...inputs].map(row => ({
+      name: row.querySelector('.pool-name')?.value.trim() || '',
+      tags: row.querySelector('.pool-input')?.value.trim() || '',
+      enabled: row.querySelector('.pool-toggle')?.classList.contains('on') !== false
+    })).filter(p => p.tags));
     updateGreeting();
     const src = document.querySelector('.src-opt.active').dataset.src;
     localStorage.setItem(K.source, src);
@@ -929,7 +961,7 @@
 
   // Tag pools
   const poolsList = document.getElementById('pools-list');
-  function loadPools() { try { return JSON.parse(localStorage.getItem(K.pools) || '[]'); } catch(e) { return []; } }
+  function loadPools() { try { return JSON.parse(localStorage.getItem(K.pools) || '[]').map(p => typeof p === 'string' ? {name:'', tags:p, enabled:true} : p); } catch(e) { return []; } }
   function savePools(pools) { localStorage.setItem(K.pools, JSON.stringify(pools)); }
 
   function renderPools() {
@@ -945,35 +977,36 @@
     pools.forEach((p, i) => {
       const row = document.createElement('div');
       row.className = 'pool-row';
-      row.innerHTML = `<input class="pool-input" value="${p.replace(/"/g,'&quot;')}" placeholder="score:>30 rating:e"/>
-        <button class="pool-del" data-i="${i}">×</button>`;
-      poolsList.appendChild(row);
-    });
-    poolsList.querySelectorAll('.pool-del').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const p = loadPools(); p.splice(+btn.dataset.i, 1); savePools(p); renderPools();
+      const nameVal = (p.name||'').replace(/"/g,'&quot;');
+      const tagsVal = (p.tags||'').replace(/"/g,'&quot;');
+      const isOn = p.enabled !== false;
+      row.innerHTML = `
+        <input class="pool-name" value="${nameVal}" placeholder="Name"/>
+        <input class="pool-input" value="${tagsVal}" placeholder="score:>30 rating:e"/>
+        <button class="pool-toggle ${isOn ? 'on' : ''}">${isOn ? 'On' : 'Off'}</button>
+        <button class="pool-del">×</button>`;
+      row.querySelector('.pool-toggle').addEventListener('click', function() {
+        const pools = loadPools();
+        pools[i].enabled = pools[i].enabled === false ? true : false;
+        savePools(pools); renderPools();
       });
+      row.querySelector('.pool-del').addEventListener('click', () => {
+        const pools = loadPools(); pools.splice(i, 1); savePools(pools); renderPools();
+      });
+      poolsList.appendChild(row);
     });
   }
 
   document.getElementById('pool-add-btn').addEventListener('click', () => {
-    const p = loadPools(); p.push(''); savePools(p);
-    const idx = p.length - 1;
-    const row = document.createElement('div');
-    row.className = 'pool-row';
-    row.innerHTML = `<input class="pool-input" value="" placeholder="score:>30 rating:e"/>
-      <button class="pool-del" data-i="${idx}">×</button>`;
-    row.querySelector('.pool-del').addEventListener('click', () => {
-      const pools = loadPools(); pools.splice(idx, 1); savePools(pools); renderPools();
-    });
-    poolsList.appendChild(row);
-    row.querySelector('.pool-input').focus();
+    const p = loadPools(); p.push({name:'', tags:'', enabled:true}); savePools(p); renderPools();
+    poolsList.querySelectorAll('.pool-name').at(-1)?.focus();
   });
 
   function getActivePool() {
-    const pools = loadPools();
+    const pools = loadPools().filter(p => p.enabled !== false && (p.tags||'').trim());
     if (!pools.length) return null;
-    return pools[Math.floor(Math.random() * pools.length)];
+    const p = pools[Math.floor(Math.random() * pools.length)];
+    return { tags: p.tags, name: p.name || p.tags.split(' ')[0] };
   }
 
   applyCommentVisibility();
