@@ -12,7 +12,72 @@
 
   html, body { width:100%; height:100%; overflow:hidden; background:#0d0d0d; font-family:'DM Sans',sans-serif; }
 
-  #bg-wrap { position:fixed; inset:-80px; z-index:0; will-change:transform; transition:transform 0.18s var(--ease); }
+  #welcome-screen {
+    position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,0.75);
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    display:flex; align-items:center; justify-content:center;
+    opacity:1; transition:opacity 0.6s ease;
+  }
+  #welcome-screen.hiding { opacity:0; pointer-events:none; }
+
+  #welcome-box {
+    text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:20px;
+    padding:0 24px;
+    animation: floatIn 0.7s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes floatIn {
+    from { opacity:0; transform:translateY(18px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  #welcome-box h1 {
+    font-family:'DM Serif Display',serif;
+    font-size:clamp(36px,6vw,64px);
+    font-weight:400; color:#fff;
+    letter-spacing:-0.02em;
+    text-shadow:0 2px 40px rgba(255,255,255,0.15);
+    line-height:1.1;
+  }
+  #welcome-box .welcome-sub {
+    font-size:14px; font-weight:300;
+    color:rgba(255,255,255,0.5);
+    letter-spacing:0.1em; text-transform:uppercase;
+  }
+  #welcome-box .welcome-credits {
+    font-size:13px; font-weight:300;
+    color:rgba(255,255,255,0.35);
+    letter-spacing:0.06em;
+  }
+  #welcome-box .welcome-credits span {
+    color:rgba(255,255,255,0.55);
+    font-weight:400;
+  }
+  #welcome-box .welcome-whisper {
+    font-size:10px;
+    color:rgba(255,255,255,0.18);
+    letter-spacing:0.08em;
+    margin-top:-12px;
+  }
+  #welcome-dismiss {
+    margin-top:8px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:40px;
+    color:rgba(255,255,255,0.6);
+    font-family:'DM Sans',sans-serif;
+    font-size:13px; font-weight:300;
+    padding:10px 32px;
+    cursor:pointer;
+    letter-spacing:0.06em;
+    transition:background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  #welcome-dismiss:hover {
+    background:rgba(255,255,255,0.14);
+    color:#fff;
+    border-color:rgba(255,255,255,0.3);
+  }
   #bg, #bg-prev {
     position:absolute; inset:0;
     width:100%; height:100%;
@@ -223,6 +288,14 @@
 </style>
 </head>
 <body>
+
+<div id="welcome-screen">
+  <div id="welcome-box">
+    <div class="welcome-credits">Made by <span>717D3V</span> on Discord</div>
+    <div class="welcome-whisper">I know what you are ;3c</div>
+    <button id="welcome-dismiss">Let's go</button>
+  </div>
+</div>
 
 <div id="bg-wrap">
   <div id="bg-prev"></div>
@@ -462,163 +535,230 @@
 </div>
 
 <script>
-  const LOCAL_EXTS = ['mp4','gif','jpg','jpeg','png','webp'];
-  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', localPath:'viv_local_path' };
-
-  const bgCur     = document.getElementById('bg');
-  const bgPrev    = document.getElementById('bg-prev');
-  const bgVideo   = document.getElementById('bg-video');
-  const bgVideoPrev = document.getElementById('bg-video-prev');
-  const bgGif     = document.getElementById('bg-gif');
-  const bgGifPrev = document.getElementById('bg-gif-prev');
-  const bgWrap    = document.getElementById('bg-wrap');
-  const muteBtn   = document.getElementById('mute-btn');
-  const muteIcon  = document.getElementById('mute-icon');
-  const muteLabel = document.getElementById('mute-label');
-  const sauceBtn  = document.getElementById('sauce-btn');
-  const hotBtn    = document.getElementById('hot-btn');
-  let currentPostId = null;
-  const settingsBtn = document.getElementById('settings-btn');
-  const panel     = document.getElementById('settings-panel');
-  const searchInput = document.getElementById('search');
-  const bgBlur    = document.getElementById('bg-blur');
-  const commentBox  = document.getElementById('comment-box');
-  const commentUser = document.getElementById('comment-user');
-  const commentText = document.getElementById('comment-text');
-
-  const SVG_MUTED = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`;
-  const SVG_SOUND = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>`;
-
-  function updateMuteUI() {
-    muteIcon.innerHTML = bgVideo.muted ? SVG_MUTED : SVG_SOUND;
-    muteLabel.textContent = bgVideo.muted ? 'Unmute' : 'Mute';
+  // first-time welcome screen — only shows once, dismissed state stored in localStorage
+  const welcomeScreen = document.getElementById('welcome-screen');
+  if (localStorage.getItem('viv_welcomed') === 'true') {
+    welcomeScreen.style.display = 'none';
+  } else {
+    const dismiss = () => {
+      welcomeScreen.classList.add('hiding');
+      setTimeout(() => {
+        welcomeScreen.style.display = 'none';
+        localStorage.setItem('viv_welcomed', 'true');
+      }, 600);
+    };
+    document.getElementById('welcome-dismiss').addEventListener('click', dismiss);
+    welcomeScreen.addEventListener('click', e => { if (e.target === welcomeScreen) dismiss(); });
   }
-  muteBtn.addEventListener('click', () => { bgVideo.muted = !bgVideo.muted; updateMuteUI(); });
+  const SUPPORTED_EXTS = ['mp4', 'gif', 'jpg', 'jpeg', 'png', 'webp'];
 
+  // localStorage key map — keeps keys consistent if I rename things later
+  // TODO: migrate old keys at some point, people who set this up early will have stale data
+  const STORE = {
+    source:         'viv_src',
+    e6user:         'viv_e6_user',
+    e6key:          'viv_e6_key',
+    searchTags:     'viv_e6_tags',
+    savedWallpaper: 'viv_wp_data',
+    savedWallType:  'viv_wp_type',
+    muteOnStart:    'viv_start_muted',
+    username:       'viv_name',
+    videoVolume:    'viv_volume',
+    tagPools:       'viv_pools',
+    showComments:   'viv_comments_vis',
+    autoSkip:       'viv_auto_skip',
+    localFilePath:  'viv_local_path',
+    searchEngine:   'viv_search_engine',
+  };
+
+  // — background layer elements —
+  // two layers (current + previous) so we can crossfade between them
+  const wallpaperCurrent  = document.getElementById('bg');
+  const wallpaperPrevious = document.getElementById('bg-prev');
+  const videoPlayer       = document.getElementById('bg-video');
+  const videoPrevious     = document.getElementById('bg-video-prev');
+  const gifPlayer         = document.getElementById('bg-gif');
+  const gifPrevious       = document.getElementById('bg-gif-prev');
+  const backgroundWrap    = document.getElementById('bg-wrap'); // this is what we translate for parallax
+
+  // — ui buttons —
+  const muteButton    = document.getElementById('mute-btn');
+  const muteIconEl    = document.getElementById('mute-icon');
+  const muteLabelEl   = document.getElementById('mute-label');
+  const sourceLink    = document.getElementById('sauce-btn');   // "sauce" = source, in case that's not obvious
+  const favoriteBtn   = document.getElementById('hot-btn');     // "hot" = add to favorites
+  const settingsBtn   = document.getElementById('settings-btn');
+  const settingsPanel = document.getElementById('settings-panel');
+  const searchBar     = document.getElementById('search');
+  const blurOverlay   = document.getElementById('bg-blur');     // used during image transitions
+
+  // — comment overlay elements —
+  const commentOverlay  = document.getElementById('comment-box');
+  const commentAuthor   = document.getElementById('comment-user');
+  const commentBody     = document.getElementById('comment-text');
+
+  // tracks the e621 post id currently on screen, null when using local wallpaper
+  // needed for hot/sauce buttons and re-fetching comments
+  let activePostId = null;
+
+  // SVG paths for the mute button icon — swap between these on toggle
+  // note: these are inner SVG content, not full elements
+  const ICON_MUTED = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`;
+  const ICON_SOUND = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>`;
+
+  function refreshMuteButton() {
+    muteIconEl.innerHTML = videoPlayer.muted ? ICON_MUTED : ICON_SOUND;
+    muteLabelEl.textContent = videoPlayer.muted ? 'Unmute' : 'Mute';
+  }
+  muteButton.addEventListener('click', () => { videoPlayer.muted = !videoPlayer.muted; refreshMuteButton(); });
+
+  // crossfade() was supposed to do something clever here
+  // kept it in case I want to add easing later, for now it's basically a no-op
   function crossfade(showFn) {
     setTimeout(showFn, 50);
   }
 
-  function showVideo(url) {
-    clearImageTimer();
-    bgVideoPrev.src = bgVideo.src || '';
-    if (bgVideoPrev.src) { bgVideoPrev.style.display = 'block'; bgVideoPrev.play().catch(()=>{}); }
-    bgGifPrev.style.display = 'none';
-    bgPrev.style.opacity = '1'; bgCur.style.opacity = '0';
+  // loads and plays a video as background, crossfading from whatever was showing before
+  // tries to autoplay, falls back to muted if the browser blocks it
+  // loop attribute is set here explicitly because some browsers drop it on src change
+  function playVideoBackground(url) {
+    cancelImageTimer();
+    videoPrevious.src = videoPlayer.src || '';
+    if (videoPrevious.src) { videoPrevious.style.display = 'block'; videoPrevious.play().catch(()=>{}); }
+    gifPrevious.style.display = 'none';
+    wallpaperPrevious.style.opacitargetY = '1'; wallpaperCurrent.style.opacitargetY = '0';
 
-    bgVideo.muted = localStorage.getItem(K.startMuted) !== 'false';
-    bgVideo.loop = true;
-    const savedVol = localStorage.getItem(K.volume);
-    bgVideo.volume = savedVol !== null ? +savedVol / 100 : 1;
-    videoSkipArmed = false;
+    videoPlayer.muted = localStorage.getItem(STORE.muteOnStart) !== 'false';
+    videoPlayer.loop = true;
+    const savedVol = localStorage.getItem(STORE.videoVolume);
+    videoPlayer.volume = savedVol !== null ? +savedVol / 100 : 1;
+    nearEndTriggered = false;
 
     let played = false;
     const tryPlay = () => {
       if (played) return; played = true;
-      bgVideo.style.display = 'block'; bgVideo.style.opacity = '0';
-      bgVideo.play().catch(() => { bgVideo.muted = true; bgVideo.play().catch(()=>{}); });
-      bgCur.style.backgroundImage = 'none'; bgGif.style.display = 'none';
+      videoPlayer.style.display = 'block'; videoPlayer.style.opacitargetY = '0';
+      videoPlayer.play().catch(() => { videoPlayer.muted = true; videoPlayer.play().catch(()=>{}); });
+      wallpaperCurrent.style.backgroundImage = 'none'; gifPlayer.style.display = 'none';
       requestAnimationFrame(() => {
-        bgVideo.style.opacity = '1';
-        bgVideoPrev.style.opacity = '0';
-        bgGifPrev.style.opacity = '0';
-        bgPrev.style.opacity = '0';
+        videoPlayer.style.opacitargetY = '1';
+        videoPrevious.style.opacitargetY = '0';
+        gifPrevious.style.opacitargetY = '0';
+        wallpaperPrevious.style.opacitargetY = '0';
         setTimeout(() => {
-          bgVideoPrev.style.display = 'none'; bgVideoPrev.style.opacity = '1';
-          bgGifPrev.style.display = 'none'; bgGifPrev.style.opacity = '1';
+          videoPrevious.style.display = 'none'; videoPrevious.style.opacitargetY = '1';
+          gifPrevious.style.display = 'none'; gifPrevious.style.opacitargetY = '1';
         }, 2200);
       });
-      muteBtn.style.display = 'flex'; updateMuteUI();
+      muteButton.style.display = 'flex'; refreshMuteButton();
     };
 
-    bgVideo.oncanplay = tryPlay;
-    bgVideo.onloadeddata = tryPlay;
-    bgVideo.src = url;
-    bgVideo.load();
+    videoPlayer.oncanplay = tryPlay;
+    videoPlayer.onloadeddata = tryPlay;
+    videoPlayer.src = url;
+    videoPlayer.load();
 
-    if (bgVideo.readyState >= 3) tryPlay();
+    if (videoPlayer.readyState >= 3) tryPlay();
     setTimeout(() => tryPlay(), 2000);
   }
 
-  function showGif(url) {
-    clearImageTimer();
-    clearTimeout(bgGif._loopTimer);
-    bgGifPrev.src = bgGif.src || '';
-    if (bgGifPrev.src) { bgGifPrev.style.display = 'block'; bgGifPrev.style.opacity = '1'; }
-    bgVideoPrev.style.display = 'none';
-    bgPrev.style.opacity = '1'; bgCur.style.opacity = '0';
+  // gifs are just images as far as the browser is concerned, but they loop automatically
+  // we set a timer to move on after ~10s since we can't detect gif loop end natively
+  // TODO: look into canvas-based frame counting if this feels too arbitrary
+  function playGifBackground(url) {
+    cancelImageTimer();
+    clearTimeout(gifPlayer._loopTimer);
+    gifPrevious.src = gifPlayer.src || '';
+    if (gifPrevious.src) { gifPrevious.style.display = 'block'; gifPrevious.style.opacitargetY = '1'; }
+    videoPrevious.style.display = 'none';
+    wallpaperPrevious.style.opacitargetY = '1'; wallpaperCurrent.style.opacitargetY = '0';
 
-    bgGif.src = url; bgGif.style.display = 'block'; bgGif.style.opacity = '0';
-    bgGif.onload = () => {
+    gifPlayer.src = url; gifPlayer.style.display = 'block'; gifPlayer.style.opacitargetY = '0';
+    gifPlayer.onload = () => {
       requestAnimationFrame(() => {
-        bgGif.style.opacity = '1';
-        bgGifPrev.style.opacity = '0';
-        bgPrev.style.opacity = '0';
-        setTimeout(() => { bgGifPrev.style.display = 'none'; bgGifPrev.style.opacity = '1'; }, 2200);
+        gifPlayer.style.opacitargetY = '1';
+        gifPrevious.style.opacitargetY = '0';
+        wallpaperPrevious.style.opacitargetY = '0';
+        setTimeout(() => { gifPrevious.style.display = 'none'; gifPrevious.style.opacitargetY = '1'; }, 2200);
       });
-      bgGif._loopTimer = setTimeout(() => { if (autoSkipEnabled()) fetchE621(); }, 10000);
+      gifPlayer._loopTimer = setTimeout(() => { if (shouldAutoSkip()) loadNextPost(); }, 10000);
     };
-    bgCur.style.backgroundImage = 'none'; bgVideo.style.opacity = '0'; bgVideo.style.display = 'none';
-    muteBtn.style.display = 'none';
+    wallpaperCurrent.style.backgroundImage = 'none'; videoPlayer.style.opacitargetY = '0'; videoPlayer.style.display = 'none';
+    muteButton.style.display = 'none';
   }
 
-  function showImage(url) {
-    bgPrev.style.backgroundImage = bgCur.style.backgroundImage || 'none';
-    bgPrev.style.opacity = '1';
-    bgCur.style.opacity = '0';
-    bgVideo.style.display = 'none'; bgGif.style.display = 'none';
-    bgVideoPrev.style.display = 'none'; bgGifPrev.style.display = 'none';
-    muteBtn.style.display = 'none';
+  // static images — crossfade in, start the auto-skip timer
+  function showStaticBackground(url) {
+    wallpaperPrevious.style.backgroundImage = wallpaperCurrent.style.backgroundImage || 'none';
+    wallpaperPrevious.style.opacitargetY = '1';
+    wallpaperCurrent.style.opacitargetY = '0';
+    videoPlayer.style.display = 'none'; gifPlayer.style.display = 'none';
+    videoPrevious.style.display = 'none'; gifPrevious.style.display = 'none';
+    muteButton.style.display = 'none';
 
     const img = new Image();
     img.onload = () => {
-      bgCur.style.backgroundImage = `url('${url}')`;
+      wallpaperCurrent.style.backgroundImage = `url('${url}')`;
       requestAnimationFrame(() => {
-        bgCur.style.opacity = '1';
-        bgPrev.style.opacity = '0';
+        wallpaperCurrent.style.opacitargetY = '1';
+        wallpaperPrevious.style.opacitargetY = '0';
       });
-      startImageTimer();
+      scheduleNextImage();
     };
     img.src = url;
   }
 
-  function applyMedia(url, type) {
-    if (type === 'video/mp4') return showVideo(url);
-    if (type === 'image/gif') return showGif(url);
-    return showImage(url);
+  // routes to the right show* function based on file type
+  function loadMedia(url, type) {
+    if (type === 'video/mp4') return playVideoBackground(url);
+    if (type === 'image/gif') return playGifBackground(url);
+    return showStaticBackground(url);
   }
 
+  // interval id for the comment cycling — null when not running
+  // clear this before starting a new cycle or you'll get ghost intervals stacking up
+  // learned this the hard way
   let commentCycle = null;
   let imageTimer = null;
 
-  function autoSkipEnabled() { return localStorage.getItem(K.autoSkip) !== 'false'; }
+  // checks the auto-skip setting — reads live from storage so toggling in settings
+  // takes effect immediately without a page reload
+  function shouldAutoSkip() { return localStorage.getItem(STORE.autoSkip) !== 'false'; }
 
-  function clearImageTimer() { clearTimeout(imageTimer); imageTimer = null; }
+  // cancel the pending image swap if we're navigating away early
+  function cancelImageTimer() { clearTimeout(imageTimer); imageTimer = null; }
 
-  function startImageTimer() {
-    clearImageTimer();
-    if (!autoSkipEnabled()) return;
+  // starts a 5-10s random timer after an image loads
+  // when it fires, blur in, fetch next post, blur out
+  // random delay so it doesn't feel mechanical
+  function scheduleNextImage() {
+    cancelImageTimer();
+    if (!shouldAutoSkip()) return;
     const delay = 5000 + Math.random() * 5000;
     imageTimer = setTimeout(() => {
-      bgBlur.classList.add('blurring');
+      blurOverlay.classList.add('blurring');
       setTimeout(() => {
-        fetchE621();
-        setTimeout(() => bgBlur.classList.remove('blurring'), 2500);
+        loadNextPost();
+        setTimeout(() => blurOverlay.classList.remove('blurring'), 2500);
       }, 2500);
     }, delay);
   }
 
-  let videoSkipArmed = false;
-  bgVideo.addEventListener('timeupdate', () => {
-    if (!autoSkipEnabled() || !bgVideo.duration) return;
-    if (bgVideo.currentTime >= bgVideo.duration - 0.5 && !videoSkipArmed) {
-      videoSkipArmed = true;
-      fetchE621();
+  // flag to prevent the near-end detector from firing twice per loop
+  // resets on every new play event
+  let nearEndTriggered = false;
+  videoPlayer.addEventListener('timeupdate', () => {
+    if (!shouldAutoSkip() || !videoPlayer.duration) return;
+    if (videoPlayer.currentTime >= videoPlayer.duration - 0.5 && !nearEndTriggered) {
+      nearEndTriggered = true;
+      loadNextPost();
     }
   });
-  bgVideo.addEventListener('play', () => { videoSkipArmed = false; });
+  videoPlayer.addEventListener('play', () => { nearEndTriggered = false; });
 
-  function cleanComment(body) {
+  // strips e621 BBCode quote blocks, @mentions, reply headers
+  // leaving just the raw comment text
+  function stripCommentNoise(body) {
     return body
       .replace(/\[quote\][\s\S]*?\[\/quote\]/gi, '')
       .replace(/@\w+/g, '')
@@ -626,24 +766,27 @@
       .trim();
   }
 
-  function startComments(comments) {
+  // picks a random comment from the list and cycles through them every 4s
+  // strips quote blocks and @mentions before displaying
+  // note: comments are fetched separately after the post loads, not bundled in the post response
+  function cycleComments(comments) {
     clearInterval(commentCycle);
-    commentBox.style.display = 'none';
-    commentBox.classList.remove('visible');
+    commentOverlay.style.display = 'none';
+    commentOverlay.classList.remove('visible');
     if (!commentsVisible) return;
     const filtered = comments
-      .map(c => ({ ...c, body: cleanComment(c.body || '') }))
+      .map(c => ({ ...c, body: stripCommentNoise(c.body || '') }))
       .filter(c => c.body.length > 0 && c.body.length < 280);
     if (!filtered.length) return;
     let idx = 0;
     function show() {
       const c = filtered[idx % filtered.length];
-      commentBox.classList.remove('visible');
+      commentOverlay.classList.remove('visible');
       setTimeout(() => {
-        commentUser.textContent = c.creator_name || 'anonymous';
-        commentText.textContent = c.body.trim();
-        commentBox.style.display = 'flex';
-        requestAnimationFrame(() => commentBox.classList.add('visible'));
+        commentAuthor.textContent = c.creator_name || 'anonymous';
+        commentBody.textContent = c.body.trim();
+        commentOverlay.style.display = 'flex';
+        requestAnimationFrame(() => commentOverlay.classList.add('visible'));
         idx++;
       }, 500);
     }
@@ -651,17 +794,20 @@
     commentCycle = setInterval(show, 4000);
   }
 
-  async function fetchE621() {
-    const user = localStorage.getItem(K.user);
-    const key  = localStorage.getItem(K.key);
+  async // main wallpaper fetch — pulls a random post from e621 based on current tags/pool
+  // if tags is just a number, treat it as a post ID and load that directly
+  // TODO: add retry logic if the post has no file url
+  async function loadNextPost() {
+    const user = localStorage.getItem(STORE.e6user);
+    const key  = localStorage.getItem(STORE.e6key);
     const pool = getActivePool();
-    const tags = pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50');
+    const tags = pool ? pool.tags : (localStorage.getItem(STORE.searchTags) || 'score:>50');
     const poolBadge = document.getElementById('pool-badge');
     const poolDivider = document.getElementById('pool-divider');
     if (pool && pool.name) {
       poolBadge.textContent = pool.name; poolBadge.style.display = ''; poolDivider.style.display = '';
     } else { poolBadge.style.display = 'none'; poolDivider.style.display = 'none'; }
-    if (!user || !key) { fallbackLocal(); return; }
+    if (!user || !key) { useLocalWallpaper(); return; }
     const auth = 'Basic ' + btoa(user + ':' + key);
 
     if (/^\d+$/.test(tags.trim())) {
@@ -671,9 +817,9 @@
         const data = await res.json();
         const post = data.post;
         if (!post || !post.file || !post.file.url) throw new Error('no file');
-        applyPost(post, user, key);
+        displayPost(post, user, key);
         return;
-      } catch(e) { console.warn('post ID fetch failed:', e); fallbackLocal(); return; }
+      } catch(e) { console.warn('post ID fetch failed:', e); useLocalWallpaper(); return; }
     }
 
     const params = new URLSearchParams({ limit:1, tags: tags + ' order:random -flash' });
@@ -682,20 +828,22 @@
       if (!res.ok) throw new Error('API error ' + res.status);
       const data = await res.json();
       const posts = (data.posts || []).filter(p => p.file && p.file.url);
-      if (!posts.length) { fallbackLocal(); return; }
-      applyPost(posts[0], user, key);
-    } catch(e) { console.warn('e621 fetch failed:', e); fallbackLocal(); }
+      if (!posts.length) { useLocalWallpaper(); return; }
+      displayPost(posts[0], user, key);
+    } catch(e) { console.warn('e621 fetch failed:', e); useLocalWallpaper(); }
   }
 
-  function applyPost(post, user, key) {
+  // takes a raw e621 post object and makes it the current wallpaper
+  // also updates sauce link, score badge, artist display, comments etc
+  function displayPost(post, user, key) {
     const ext  = post.file.ext.toLowerCase();
     const type = ext === 'mp4' || ext === 'webm' ? 'video/mp4' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
-    applyMedia(post.file.url, type);
-    sauceBtn.href = 'https://e621.net/posts/' + post.id;
-    sauceBtn.style.display = 'flex';
-    currentPostId = post.id;
-    hotBtn.style.display = 'flex';
-    hotBtn.classList.remove('faved');
+    loadMedia(post.file.url, type);
+    sourceLink.href = 'https://e621.net/posts/' + post.id;
+    sourceLink.style.display = 'flex';
+    activePostId = post.id;
+    favoriteBtn.style.display = 'flex';
+    favoriteBtn.classList.remove('faved');
     const artists = (post.tags && post.tags.artist) ? post.tags.artist.filter(a => a !== 'conditional_dnp' && a !== 'sound_warning') : [];
     const artistName = artists.map(a => a.replace(/_/g, ' ')).join(', ');
     document.getElementById('artist-val').textContent = artistName;
@@ -714,10 +862,12 @@
     else { ratingEl.textContent = ''; ratingEl.className = ''; }
 
     document.getElementById('score-badge').style.display = 'flex';
-    fetchCommentsForPost(post.id, user, key);
+    fetchPostComments(post.id, user, key);
   }
 
-  async function fetchCommentsForPost(postId, user, key) {
+  async // fetches top 20 comments for the current post, sorted by score
+  // called after displayPost() settles — fire and forget, comments are optional
+  async function fetchPostComments(postId, user, key) {
     try {
       const auth = 'Basic ' + btoa(user + ':' + key);
       const params = new URLSearchParams({ 'search[post_id]':postId, limit:20, 'search[order]':'score' });
@@ -725,60 +875,66 @@
       if (!res.ok) throw new Error('comments API error ' + res.status);
       const json = await res.json();
       const comments = Array.isArray(json) ? json : (json.comments || []);
-      startComments(comments);
+      cycleComments(comments);
     } catch(e) {
       console.warn('comments fetch failed:', e.message);
       clearInterval(commentCycle);
-      commentBox.style.display = 'none';
+      commentOverlay.style.display = 'none';
     }
   }
 
-  function fallbackLocal() {
-    clearImageTimer();
-    clearTimeout(bgGif._loopTimer);
+  // something went wrong with e621 (no credentials, bad response, etc)
+  // fall back to whatever local wallpaper the user has set up
+  // if there's nothing local either, just show a dark background — that's fine
+  function useLocalWallpaper() {
+    cancelImageTimer();
+    clearTimeout(gifPlayer._loopTimer);
     clearInterval(commentCycle);
-    commentBox.style.display = 'none';
-    sauceBtn.style.display = 'none';
-    hotBtn.style.display = 'none';
-    currentPostId = null;
+    commentOverlay.style.display = 'none';
+    sourceLink.style.display = 'none';
+    favoriteBtn.style.display = 'none';
+    activePostId = null;
     document.getElementById('score-badge').style.display = 'none';
-    const d = localStorage.getItem(K.wpData), t = localStorage.getItem(K.wpType);
-    if (d && t) { applyMedia(d, t); return; }
-    tryLocalFile(0);
+    const d = localStorage.getItem(STORE.savedWallpaper), t = localStorage.getItem(STORE.savedWallType);
+    if (d && t) { loadMedia(d, t); return; }
+    tryFileExtension(0);
   }
 
-  function tryLocalFile(i) {
-    const base = localStorage.getItem(K.localPath);
+  // tries each supported file extension in order until one loads
+  // e.g. wallpaper.mp4 -> wallpaper.gif -> wallpaper.jpg etc
+  function tryFileExtension(i) {
+    const base = localStorage.getItem(STORE.localFilePath);
     if (!base) return;
-    if (i >= LOCAL_EXTS.length) return;
-    const ext = LOCAL_EXTS[i], url = base.replace(/\\/g, '/').replace(/^([a-zA-Z]:)/, 'file:///$1') + '.' + ext;
+    if (i >= SUPPORTED_EXTS.length) return;
+    const ext = SUPPORTED_EXTS[i], url = base.replace(/\\/g, '/').replace(/^([a-zA-Z]:)/, 'file:///$1') + '.' + ext;
     if (ext === 'mp4') {
-      const v = bgVideo; v.src = url; v.load();
-      v.oncanplay = () => showVideo(url);
-      v.onerror = () => tryLocalFile(i + 1);
+      const v = videoPlayer; v.src = url; v.load();
+      v.oncanplay = () => playVideoBackground(url);
+      v.onerror = () => tryFileExtension(i + 1);
     } else {
       const p = new Image();
-      p.onload  = () => ext === 'gif' ? showGif(url) : showImage(url);
-      p.onerror = () => tryLocalFile(i + 1);
+      p.onload  = () => ext === 'gif' ? playGifBackground(url) : showStaticBackground(url);
+      p.onerror = () => tryFileExtension(i + 1);
       p.src = url;
     }
   }
 
-  function init() {
-    const source = localStorage.getItem(K.source) || 'local';
-    if (source === 'e621' && localStorage.getItem(K.user) && localStorage.getItem(K.key)) fetchE621();
-    else fallbackLocal();
+  // kick everything off — check what source is configured and load the first wallpaper
+  function startup() {
+    const source = localStorage.getItem(STORE.source) || 'local';
+    if (source === 'e621' && localStorage.getItem(STORE.e6user) && localStorage.getItem(STORE.e6key)) loadNextPost();
+    else useLocalWallpaper();
   }
-  init();
+  startup();
 
-  document.getElementById('gross-btn').addEventListener('click', () => fetchE621());
+  document.getElementById('gross-btn').addEventListener('click', () => loadNextPost());
 
-  hotBtn.addEventListener('click', async () => {
-    if (!currentPostId) return;
-    const user = localStorage.getItem(K.user);
-    const key  = localStorage.getItem(K.key);
+  favoriteBtn.addEventListener('click', async () => {
+    if (!activePostId) return;
+    const user = localStorage.getItem(STORE.e6user);
+    const key  = localStorage.getItem(STORE.e6key);
     if (!user || !key) return;
-    if (hotBtn.classList.contains('faved')) return;
+    if (favoriteBtn.classList.contains('faved')) return;
     const auth = 'Basic ' + btoa(user + ':' + key);
     try {
       const res = await fetch('https://e621.net/favorites.json', {
@@ -788,9 +944,9 @@
           'User-Agent': 'VivaldiStartpage/1.0',
           'Authorization': auth
         },
-        body: new URLSearchParams({ post_id: currentPostId })
+        body: new URLSearchParams({ post_id: activePostId })
       });
-      if (res.ok || res.status === 422) hotBtn.classList.add('faved');
+      if (res.ok || res.status === 422) favoriteBtn.classList.add('faved');
     } catch(e) { console.warn('favorite failed:', e); }
   });
 
@@ -799,92 +955,106 @@
     const file = this.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = e => {
-      applyMedia(e.target.result, file.type);
-      sauceBtn.style.display = 'none';
-      clearInterval(commentCycle); commentBox.style.display = 'none';
-      try { localStorage.setItem(K.wpData, e.target.result); localStorage.setItem(K.wpType, file.type); localStorage.setItem(K.source, 'local'); } catch(err) {}
-      panel.classList.remove('open');
+      loadMedia(e.target.result, file.type);
+      sourceLink.style.display = 'none';
+      clearInterval(commentCycle); commentOverlay.style.display = 'none';
+      try { localStorage.setItem(STORE.savedWallpaper, e.target.result); localStorage.setItem(STORE.savedWallType, file.type); localStorage.setItem(STORE.source, 'local'); } catch(err) {}
+      settingsPanel.classList.remove('open');
     };
     reader.readAsDataURL(file);
   });
 
   settingsBtn.addEventListener('click', () => {
-    document.getElementById('cfg-name').value = localStorage.getItem(K.name) || '';
-    document.getElementById('cfg-user').value = localStorage.getItem(K.user) || '';
-    document.getElementById('cfg-key').value  = localStorage.getItem(K.key)  || '';
-    document.getElementById('cfg-tags').value = localStorage.getItem(K.tags) || '';
-    document.getElementById('cfg-start-muted').checked = localStorage.getItem(K.startMuted) !== 'false';
-    document.getElementById('cfg-auto-skip').checked = localStorage.getItem(K.autoSkip) !== 'false';
-    document.getElementById('cfg-local-path').value = localStorage.getItem(K.localPath) || '';
-    document.getElementById('cfg-comments').checked = localStorage.getItem(K.commentsVisible) !== 'false';
-    const sv = localStorage.getItem(K.volume) || '100';
+    document.getElementById('cfg-name').value = localStorage.getItem(STORE.username) || '';
+    const se = document.getElementById('cfg-search-engine');
+    se.value = localStorage.getItem(STORE.searchEngine) || 'https://duckduckgo.com/?q=';
+    document.getElementById('cfg-user').value = localStorage.getItem(STORE.e6user) || '';
+    document.getElementById('cfg-key').value  = localStorage.getItem(STORE.e6key)  || '';
+    document.getElementById('cfg-tags').value = localStorage.getItem(STORE.searchTags) || '';
+    document.getElementById('cfg-start-muted').checked = localStorage.getItem(STORE.muteOnStart) !== 'false';
+    document.getElementById('cfg-auto-skip').checked = localStorage.getItem(STORE.autoSkip) !== 'false';
+    document.getElementById('cfg-local-path').value = localStorage.getItem(STORE.localFilePath) || '';
+    document.getElementById('cfg-comments').checked = localStorage.getItem(STORE.showComments) !== 'false';
+    const sv = localStorage.getItem(STORE.videoVolume) || '100';
     volSlider.value = sv; volVal.textContent = sv + '%';
     renderPools();
-    setActiveSource(localStorage.getItem(K.source) || 'local');
-    panel.classList.add('open');
+    switchSourceTab(localStorage.getItem(STORE.source) || 'local');
+    settingsPanel.classList.add('open');
   });
-  document.querySelectorAll('.src-opt').forEach(btn => btn.addEventListener('click', () => setActiveSource(btn.dataset.src)));
+  document.querySelectorAll('.src-opt').forEach(btn => btn.addEventListener('click', () => switchSourceTab(btn.dataset.src)));
 
-  function setActiveSource(src) {
+  // toggles which source section (e621 vs local) is visible in settings
+  function switchSourceTab(src) {
     document.querySelectorAll('.src-opt').forEach(b => b.classList.toggle('active', b.dataset.src === src));
     document.getElementById('e621-fields').classList.toggle('visible', src === 'e621');
     document.getElementById('local-fields').classList.toggle('visible', src === 'local');
   }
 
-  function saveSettings() {
+  // called when clicking outside the settings panel
+  // reads all current field values and persists them to localStorage
+  // does NOT trigger a new post fetch — changes take effect naturally on next skip
+  function commitSettings() {
     const name = document.getElementById('cfg-name').value.trim();
-    if (name) localStorage.setItem(K.name, name); else localStorage.removeItem(K.name);
-    localStorage.setItem(K.startMuted, document.getElementById('cfg-start-muted').checked ? 'true' : 'false');
-    localStorage.setItem(K.autoSkip, document.getElementById('cfg-auto-skip').checked ? 'true' : 'false');
+    if (name) localStorage.setItem(STORE.username, name); else localStorage.removeItem(STORE.username);
+    localStorage.setItem(STORE.searchEngine, document.getElementById('cfg-search-engine').value);
+    localStorage.setItem(STORE.muteOnStart, document.getElementById('cfg-start-muted').checked ? 'true' : 'false');
+    localStorage.setItem(STORE.autoSkip, document.getElementById('cfg-auto-skip').checked ? 'true' : 'false');
     commentsVisible = document.getElementById('cfg-comments').checked;
-    localStorage.setItem(K.commentsVisible, commentsVisible ? 'true' : 'false');
+    localStorage.setItem(STORE.showComments, commentsVisible ? 'true' : 'false');
     applyCommentVisibility();
-    const inputs = poolsList.querySelectorAll('.pool-row');
+    const inputs = poolsContainer.querySelectorAll('.pool-row');
     savePools([...inputs].map(row => ({
       name: row.querySelector('.pool-name')?.value.trim() || '',
       tags: row.querySelector('.pool-input')?.value.trim() || '',
       enabled: row.querySelector('.pool-toggle')?.classList.contains('on') !== false
     })).filter(p => p.tags));
-    updateGreeting();
+    refreshGreeting();
     const src = document.querySelector('.src-opt.active').dataset.src;
-    localStorage.setItem(K.source, src);
+    localStorage.setItem(STORE.source, src);
     if (src === 'e621') {
       const user = document.getElementById('cfg-user').value.trim();
       const key  = document.getElementById('cfg-key').value.trim();
       const tags = document.getElementById('cfg-tags').value.trim();
-      if (user) localStorage.setItem(K.user, user);
-      if (key)  localStorage.setItem(K.key, key);
-      if (tags) localStorage.setItem(K.tags, tags);
+      if (user) localStorage.setItem(STORE.e6user, user);
+      if (key)  localStorage.setItem(STORE.e6key, key);
+      if (tags) localStorage.setItem(STORE.searchTags, tags);
     } else {
       const path = document.getElementById('cfg-local-path').value.trim();
-      if (path) localStorage.setItem(K.localPath, path);
-      sauceBtn.style.display = 'none';
-      clearInterval(commentCycle); commentBox.style.display = 'none';
+      if (path) localStorage.setItem(STORE.localFilePath, path);
+      sourceLink.style.display = 'none';
+      clearInterval(commentCycle); commentOverlay.style.display = 'none';
     }
-    panel.classList.remove('open');
+    settingsPanel.classList.remove('open');
   }
 
-  panel.addEventListener('click', e => { if (e.target === panel) saveSettings(); });
+  settingsPanel.addEventListener('click', e => { if (e.target === settingsPanel) commitSettings(); });
 
-  function updateGreeting() {
-    const name = localStorage.getItem(K.name) || '';
+  // time-of-day greeting — morning/afternoon/evening based on hour
+  // only shows if the user has set their name in settings
+  function refreshGreeting() {
+    const name = localStorage.getItem(STORE.username) || '';
     const h = new Date().getHours();
     const tod = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
     const el = document.getElementById('greeting');
     el.textContent = name ? tod + ', ' + name : '';
   }
-  updateGreeting();
+  refreshGreeting();
 
+  // mobile detection — checks user agent first, falls back to screen width
+  // the width check catches edge cases like tablets in portrait mode
+  // note: this runs once at load time, won't update if you resize the window
   const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
 
-  let tx=0, ty=0, cx=0, cy=0;
+  // parallax target (tx/ty) and current smoothed position (px/py)
+  // the raf loop lerps current toward target for a smooth follow effect
+  let targetX = 0, targetY = 0, currentX = 0, currentY = 0;
 
   if (isMobile) {
     const startGyro = () => {
       window.addEventListener('deviceorientation', e => {
         if (e.gamma == null || e.beta == null) return;
-        tx = Math.max(-1, Math.min(1, e.gamma / 30)) * 22;
-        ty = Math.max(-1, Math.min(1, (e.beta - 30) / 30)) * 22;
+        targetX = Math.max(-1, Math.min(1, e.gamma / 30)) * 22;
+        targetY = Math.max(-1, Math.min(1, (e.beta - 30) / 30)) * 22;
       });
     };
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -895,48 +1065,50 @@
       startGyro();
     }
     document.addEventListener('touchstart', () => {
-      if (bgVideo.paused) bgVideo.play().catch(()=>{});
+      if (videoPlayer.paused) videoPlayer.play().catch(()=>{});
     }, { once: true });
   } else {
     document.addEventListener('mousemove', e => {
-      tx = (e.clientX / window.innerWidth  - 0.5) * 22;
-      ty = (e.clientY / window.innerHeight - 0.5) * 22;
+      targetX = (e.clientX / window.innerWidth  - 0.5) * 22;
+      targetY = (e.clientY / window.innerHeight - 0.5) * 22;
     });
   }
 
   (function raf() {
-    cx += (tx-cx)*0.07; cy += (ty-cy)*0.07;
-    bgWrap.style.transform = `translate(${cx}px,${cy}px)`;
+    currentX += (targetX-currentX)*0.07; currentY += (targetY-currentY)*0.07;
+    backgroundWrap.style.transform = `translate(${currentX}px,${currentY}px)`;
     requestAnimationFrame(raf);
   })();
 
-  function updateClock() {
+  // updates the clock display every 10s
+  // could do every second but that's overkill for a start page
+  function tickClock() {
     const now = new Date();
     document.getElementById('clock-time').textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
     const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     document.getElementById('clock-date').textContent = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate();
   }
-  updateClock();
+  tickClock();
   setInterval(updateClock, 10000);
 
   document.getElementById('search-form').addEventListener('submit', async e => {
     e.preventDefault();
-    const q = searchInput.value.trim();
+    const q = searchBar.value.trim();
     if (!q) return;
 
     if (/^\d+$/.test(q)) {
-      const user = localStorage.getItem(K.user);
-      const key  = localStorage.getItem(K.key);
+      const user = localStorage.getItem(STORE.e6user);
+      const key  = localStorage.getItem(STORE.e6key);
       if (user && key) {
-        searchInput.value = '';
+        searchBar.value = '';
         const auth = 'Basic ' + btoa(user + ':' + key);
         try {
           const res = await fetch(`https://e621.net/posts/${q}.json`, { headers:{ 'User-Agent':'VivaldiStartpage/1.0', 'Authorization': auth } });
           if (res.ok) {
             const data = await res.json();
             if (data.post && data.post.file && data.post.file.url) {
-              applyPost(data.post, user, key);
+              displayPost(data.post, user, key);
               return;
             }
           }
@@ -944,44 +1116,47 @@
       }
     }
 
-    window.location.href = q.startsWith('http') ? q : 'https://duckduckgo.com/?q=' + encodeURIComponent(q);
+    window.location.href = q.startsWith('http') ? q : (localStorage.getItem(STORE.searchEngine) || 'https://duckduckgo.com/?q=') + encodeURIComponent(q);
   });
 
 
   // Volume slider
+  // volume slider — updates videoPlayer.volume live as you drag
   const volSlider = document.getElementById('volume-slider');
   const volVal    = document.getElementById('volume-val');
-  const savedVol  = localStorage.getItem(K.volume);
-  if (savedVol !== null) { bgVideo.volume = +savedVol / 100; volSlider.value = savedVol; volVal.textContent = savedVol + '%'; }
+  const savedVol  = localStorage.getItem(STORE.videoVolume);
+  if (savedVol !== null) { videoPlayer.volume = +savedVol / 100; volSlider.value = savedVol; volVal.textContent = savedVol + '%'; }
   volSlider.addEventListener('input', () => {
-    bgVideo.volume = +volSlider.value / 100;
+    videoPlayer.volume = +volSlider.value / 100;
     volVal.textContent = volSlider.value + '%';
-    localStorage.setItem(K.volume, volSlider.value);
+    localStorage.setItem(STORE.videoVolume, volSlider.value);
   });
 
   // Comments visibility
-  let commentsVisible = localStorage.getItem(K.commentsVisible) !== 'false';
+  // this mirrors the stored setting but is kept in memory so we don't hit localStorage on every comment cycle
+  let commentsVisible = localStorage.getItem(STORE.showComments) !== 'false';
   function applyCommentVisibility() {
     if (!commentsVisible) {
-      commentBox.style.display = 'none';
-      commentBox.classList.remove('visible');
+      commentOverlay.style.display = 'none';
+      commentOverlay.classList.remove('visible');
       clearInterval(commentCycle);
     }
   }
 
   // Tag pools
-  const poolsList = document.getElementById('pools-list');
-  function loadPools() { try { return JSON.parse(localStorage.getItem(K.pools) || '[]').map(p => typeof p === 'string' ? {name:'', tags:p, enabled:true} : p); } catch(e) { return []; } }
-  function savePools(pools) { localStorage.setItem(K.pools, JSON.stringify(pools)); }
+  // the container that holds rendered pool rows in settings
+  const poolsContainer = document.getElementById('pools-list');
+  function loadPools() { try { return JSON.parse(localStorage.getItem(STORE.tagPools) || '[]').map(p => typeof p === 'string' ? {name:'', tags:p, enabled:true} : p); } catch(e) { return []; } }
+  function savePools(pools) { localStorage.setItem(STORE.tagPools, JSON.stringify(pools)); }
 
   function renderPools() {
     const pools = loadPools();
-    poolsList.innerHTML = '';
+    poolsContainer.innerHTML = '';
     if (!pools.length) {
       const hint = document.createElement('div');
       hint.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.25);padding:4px 0;';
       hint.textContent = 'No pools yet. Add one below.';
-      poolsList.appendChild(hint);
+      poolsContainer.appendChild(hint);
       return;
     }
     pools.forEach((p, i) => {
@@ -1003,12 +1178,12 @@
       row.querySelector('.pool-del').addEventListener('click', () => {
         const pools = loadPools(); pools.splice(i, 1); savePools(pools); renderPools();
       });
-      poolsList.appendChild(row);
+      poolsContainer.appendChild(row);
     });
   }
 
   document.getElementById('pool-add-btn').addEventListener('click', () => {
-    const rows = poolsList.querySelectorAll('.pool-row');
+    const rows = poolsContainer.querySelectorAll('.pool-row');
     const current = [...rows].map(row => ({
       name: row.querySelector('.pool-name')?.value.trim() || '',
       tags: row.querySelector('.pool-input')?.value.trim() || '',
@@ -1017,7 +1192,7 @@
     current.push({name:'', tags:'', enabled:true});
     savePools(current);
     renderPools();
-    poolsList.querySelectorAll('.pool-name').at(-1)?.focus();
+    poolsContainer.querySelectorAll('.pool-name').at(-1)?.focus();
   });
 
   function getActivePool() {
@@ -1043,7 +1218,7 @@
 
   eyeBtn.addEventListener('click', () => {
     uiHidden = !uiHidden;
-    ui.style.opacity = uiHidden ? '0' : '1';
+    ui.style.opacitargetY = uiHidden ? '0' : '1';
     ui.style.pointerEvents = uiHidden ? 'none' : '';
     eyeBtn.querySelector('svg').innerHTML = uiHidden ? SVG_EYE_OFF : SVG_EYE_ON;
   });
@@ -1086,8 +1261,8 @@
   let rankerStop = false;
 
   rSearchBtn.addEventListener('click', async () => {
-    const user = localStorage.getItem(K.user);
-    const key  = localStorage.getItem(K.key);
+    const user = localStorage.getItem(STORE.e6user);
+    const key  = localStorage.getItem(STORE.e6key);
     if (!user || !key) { rStatus.textContent = 'No credentials — check settings.'; return; }
 
     const tags     = document.getElementById('r-tags').value.trim();
@@ -1188,7 +1363,7 @@
 
   rStopBtn.addEventListener('click', () => { rankerStop = true; rStatus.textContent = 'Stopping…'; });
 
-  window.addEventListener('load', () => { if (!isMobile) searchInput.focus(); });
+  window.addEventListener('load', () => { if (!isMobile) searchBar.focus(); });
 </script>
 </body>
 </html>
