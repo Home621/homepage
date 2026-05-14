@@ -998,7 +998,15 @@
   }
 
   document.getElementById('pool-add-btn').addEventListener('click', () => {
-    const p = loadPools(); p.push({name:'', tags:'', enabled:true}); savePools(p); renderPools();
+    const rows = poolsList.querySelectorAll('.pool-row');
+    const current = [...rows].map(row => ({
+      name: row.querySelector('.pool-name')?.value.trim() || '',
+      tags: row.querySelector('.pool-input')?.value.trim() || '',
+      enabled: row.querySelector('.pool-toggle')?.classList.contains('on') !== false
+    }));
+    current.push({name:'', tags:'', enabled:true});
+    savePools(current);
+    renderPools();
     poolsList.querySelectorAll('.pool-name').at(-1)?.focus();
   });
 
