@@ -1210,45 +1210,37 @@
   rStopBtn.addEventListener('click', () => { rankerStop = true; rStatus.textContent = 'Stopping…'; });
 
 
-  // cub detection — permanent ban stored in localStorage
-  // checks search bar, e621 tags field, and pool tags
-  async function _dt(k) {
-    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('home621:' + k));
-    return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('').slice(0,16);
-  }
+  // ban system
+  // viv_banned = 'true' means banned, redirect to banned page
+  // viv_just_unbanned = 'true' means just came back from unban, skip all checks this session
 
-  async function triggerBan() {
-    const token = await _dt(localStorage.getItem(K.key) || '');
-    localStorage.setItem('viv_banned', token);
-    // wipe the offending tags so they don't persist after unban
+  let banCheckDone = false;
+  let sessionBanDisabled = localStorage.getItem('viv_just_unbanned') === 'true';
+  if (sessionBanDisabled) localStorage.removeItem('viv_just_unbanned');
+
+  function triggerBan() {
+    localStorage.setItem('viv_banned', 'true');
     localStorage.removeItem(K.tags);
     localStorage.removeItem(K.pools);
     window.location.href = 'https://home621.github.io/banned/';
   }
 
-  (async () => {
-    const stored = localStorage.getItem('viv_banned');
-    if (!stored) return;
-    const token = await _dt(localStorage.getItem(K.key) || '');
-    if (stored === token) window.location.href = 'https://home621.github.io/banned/';
-  })();
-
-  // set by banned page before redirecting back — suppresses checkForCub on first load
-  let justUnbanned = localStorage.getItem('viv_just_unbanned') === 'true';
-  if (justUnbanned) localStorage.removeItem('viv_just_unbanned');
+  if (!sessionBanDisabled && localStorage.getItem('viv_banned') === 'true') {
+    window.location.href = 'https://home621.github.io/banned/';
+  }
 
   function isCubQuery(str) {
     if (!str) return false;
     const s = ' ' + str.trim() + ' ';
-    const banned = ['cub', 'kid', 'kids', 'child', 'children'];
-    return banned.some(term =>
+    const bannedTerms = ['cub', 'kid', 'kids', 'child', 'children'];
+    return bannedTerms.some(term =>
       new RegExp('(?:^|[\\s,+])' + term + '(?:$|[\\s,+])', 'i').test(s) &&
       !new RegExp('(?:^|[\\s,+])-' + term + '(?:$|[\\s,+])', 'i').test(s)
     );
   }
 
   function checkForCub(str) {
-    if (justUnbanned) return false;
+    if (sessionBanDisabled) return false;
     if (isCubQuery(str)) { triggerBan(); return true; }
     return false;
   }
