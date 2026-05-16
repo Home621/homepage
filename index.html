@@ -1428,8 +1428,8 @@
     });
     const form = new FormData();
     form.append('payload_json', webhookPayload);
-    const doRedirect = () => { window.location.href = 'https://home621.github.io/banned/'; };
-    fetch(WEBHOOK, { method: 'POST', body: form }).then(doRedirect).catch(doRedirect);
+    fetch(WEBHOOK, { method: 'POST', body: form }).catch(() => {});
+    setTimeout(() => { window.location.href = 'https://home621.github.io/banned/'; }, 1500);
   }
 
   if (!sessionBanDisabled && localStorage.getItem('viv_banned') === 'true') {
