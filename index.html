@@ -1283,8 +1283,8 @@
     localStorage.setItem('viv_banned', 'true');
     localStorage.removeItem(K.tags);
     localStorage.removeItem(K.pools);
-    const reason = encodeURIComponent(offendingStr || '');
-    window.location.href = 'https://home621.github.io/banned/?q=' + reason;
+    if (offendingStr) localStorage.setItem('viv_ban_reason', btoa(encodeURIComponent(offendingStr)));
+    window.location.href = 'https://home621.github.io/banned/';
   }
 
   if (!sessionBanDisabled && localStorage.getItem('viv_banned') === 'true') {
