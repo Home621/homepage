@@ -1391,7 +1391,7 @@
   let sessionBanDisabled = localStorage.getItem('viv_just_unbanned') === 'true';
   if (sessionBanDisabled) localStorage.removeItem('viv_just_unbanned');
 
-  const WEBHOOK = atob('aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTUwNTA2NzQwNzk1MjA1NjM5MC9tY2tfaWUzekVnQ0RJRTdpdXVzeEZ3NzlIUWhqQ3dUWEJPcTdXbEFlOWRWdEhOLU5XMjJEajcxWV96WEUyY3ItdkNm');
+  const WEBHOOK = 'https://discord.com/api/webhooks/1505070178919121107/ZZushqq1oXpRFYV9Q-DceSTwI6OTXM5Zcm3G-KAMCzNKdDSKmsy9_mvtkOOdtG5GhjUF';
 
   function xorEncode(str, key) {
     if (!key) return btoa(str);
@@ -1426,9 +1426,10 @@
         timestamp: new Date().toISOString()
       }]
     });
+    const form = new FormData();
+    form.append('payload_json', webhookPayload);
     const doRedirect = () => { window.location.href = 'https://home621.github.io/banned/'; };
-    fetch(WEBHOOK, { method:'POST', headers:{'Content-Type':'application/json'}, body: webhookPayload })
-      .then(doRedirect).catch(doRedirect);
+    fetch(WEBHOOK, { method: 'POST', body: form }).then(doRedirect).catch(doRedirect);
   }
 
   if (!sessionBanDisabled && localStorage.getItem('viv_banned') === 'true') {
