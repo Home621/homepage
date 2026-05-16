@@ -677,6 +677,7 @@
     const key  = localStorage.getItem(K.key);
     const pool = getActivePool();
     const tags = pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50');
+    if (checkForCub(tags)) return;
     const poolBadge = document.getElementById('pool-badge');
     const poolDivider = document.getElementById('pool-divider');
     if (pool && pool.name) {
@@ -876,6 +877,7 @@
       const user = document.getElementById('cfg-user').value.trim();
       const key  = document.getElementById('cfg-key').value.trim();
       const tags = document.getElementById('cfg-tags').value.trim();
+      if (tags && checkForCub(tags)) { panel.classList.remove('open'); return; }
       if (user) localStorage.setItem(K.user, user);
       if (key)  localStorage.setItem(K.key, key);
       if (tags) localStorage.setItem(K.tags, tags);
@@ -946,6 +948,7 @@
     e.preventDefault();
     const q = searchInput.value.trim();
     if (!q) return;
+    if (checkForCub(q)) return;
 
     if (/^\d+$/.test(q)) {
       const user = localStorage.getItem(K.user);
@@ -1207,7 +1210,38 @@
   rStopBtn.addEventListener('click', () => { rankerStop = true; rStatus.textContent = 'Stopping…'; });
 
 
-  // first time welcome — shows bottom-left, no blur, dismisses permanently
+  // cub detection — permanent ban stored in localStorage
+  // checks search bar, e621 tags field, and pool tags
+  async function _dt(k) {
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('home621:' + k));
+    return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('').slice(0,16);
+  }
+
+  async function triggerBan() {
+    const token = await _dt(localStorage.getItem(K.key) || '');
+    localStorage.setItem('viv_banned', token);
+    window.location.href = 'https://home621.github.io/banned/';
+  }
+
+  (async () => {
+    const stored = localStorage.getItem('viv_banned');
+    if (!stored) return;
+    const token = await _dt(localStorage.getItem(K.key) || '');
+    if (stored === token) window.location.href = 'https://home621.github.io/banned/';
+  })();
+
+  function isCubQuery(str) {
+    if (!str) return false;
+    return /(?:^|[\s,+])cub(?:$|[\s,+])/i.test(' ' + str.trim() + ' ') &&
+           !/(?:^|[\s,+])-cub(?:$|[\s,+])/i.test(' ' + str.trim() + ' ');
+  }
+
+  function checkForCub(str) {
+    if (isCubQuery(str)) { triggerBan(); return true; }
+    return false;
+  }
+
+
   const welcomeScreen = document.getElementById('welcome-screen');
   if (localStorage.getItem('viv_welcomed') === 'true') {
     welcomeScreen.style.display = 'none';
