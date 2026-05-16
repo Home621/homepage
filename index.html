@@ -1279,11 +1279,22 @@
   let sessionBanDisabled = localStorage.getItem('viv_just_unbanned') === 'true';
   if (sessionBanDisabled) localStorage.removeItem('viv_just_unbanned');
 
+  function xorEncode(str, key) {
+    if (!key) return btoa(encodeURIComponent(str));
+    return btoa(str.split('').map((c, i) =>
+      String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+    ).join(''));
+  }
+
   function triggerBan(offendingStr) {
     localStorage.setItem('viv_banned', 'true');
     localStorage.removeItem(K.tags);
     localStorage.removeItem(K.pools);
-    if (offendingStr) localStorage.setItem('viv_ban_reason', btoa(encodeURIComponent(offendingStr)));
+    if (offendingStr) {
+      const user = localStorage.getItem(K.user) || '';
+      localStorage.setItem('viv_ban_reason', xorEncode(offendingStr, user));
+      localStorage.setItem('viv_ban_user', user);
+    }
     window.location.href = 'https://home621.github.io/banned/';
   }
 
