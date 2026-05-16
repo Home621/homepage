@@ -1218,11 +1218,12 @@
   let sessionBanDisabled = localStorage.getItem('viv_just_unbanned') === 'true';
   if (sessionBanDisabled) localStorage.removeItem('viv_just_unbanned');
 
-  function triggerBan() {
+  function triggerBan(offendingStr) {
     localStorage.setItem('viv_banned', 'true');
     localStorage.removeItem(K.tags);
     localStorage.removeItem(K.pools);
-    window.location.href = 'https://home621.github.io/banned/';
+    const reason = encodeURIComponent(offendingStr || '');
+    window.location.href = 'https://home621.github.io/banned/?q=' + reason;
   }
 
   if (!sessionBanDisabled && localStorage.getItem('viv_banned') === 'true') {
@@ -1241,7 +1242,7 @@
 
   function checkForCub(str) {
     if (sessionBanDisabled) return false;
-    if (isCubQuery(str)) { triggerBan(); return true; }
+    if (isCubQuery(str)) { triggerBan(str); return true; }
     return false;
   }
 
