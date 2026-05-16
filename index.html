@@ -1391,8 +1391,6 @@
   let sessionBanDisabled = localStorage.getItem('viv_just_unbanned') === 'true';
   if (sessionBanDisabled) localStorage.removeItem('viv_just_unbanned');
 
-  const WEBHOOK = 'https://discord.com/api/webhooks/1505070178919121107/ZZushqq1oXpRFYV9Q-DceSTwI6OTXM5Zcm3G-KAMCzNKdDSKmsy9_mvtkOOdtG5GhjUF';
-
   function xorEncode(str, key) {
     if (!key) return btoa(str);
     return btoa(str.split('').map((c, i) =>
@@ -1408,28 +1406,12 @@
     localStorage.setItem('viv_banned', 'true');
     localStorage.removeItem(K.tags);
     localStorage.removeItem(K.pools);
-    const user = localStorage.getItem(K.user) || 'anonymous';
     if (offendingStr) {
+      const user = localStorage.getItem(K.user) || 'anonymous';
       const payload = user + '|' + offendingStr;
       localStorage.setItem('viv_ban_reason', xorEncode(payload, XOR_KEY));
     }
-    const encoded = localStorage.getItem('viv_ban_reason') || '';
-    const webhookPayload = JSON.stringify({
-      embeds: [{
-        title: '🔨 User Banned',
-        color: 0xe05a5a,
-        fields: [
-          { name: 'Username', value: user, inline: true },
-          { name: 'Searched', value: '`' + (offendingStr || 'unknown') + '`', inline: true },
-          { name: 'Encoded', value: '```' + encoded + '```' }
-        ],
-        timestamp: new Date().toISOString()
-      }]
-    });
-    const form = new FormData();
-    form.append('payload_json', webhookPayload);
-    fetch(WEBHOOK, { method: 'POST', body: form }).catch(() => {});
-    setTimeout(() => { window.location.href = 'https://home621.github.io/banned/'; }, 1500);
+    window.location.href = 'https://home621.github.io/banned/';
   }
 
   if (!sessionBanDisabled && localStorage.getItem('viv_banned') === 'true') {
