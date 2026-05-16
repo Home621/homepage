@@ -1220,6 +1220,9 @@
   async function triggerBan() {
     const token = await _dt(localStorage.getItem(K.key) || '');
     localStorage.setItem('viv_banned', token);
+    // wipe the offending tags so they don't persist after unban
+    localStorage.removeItem(K.tags);
+    localStorage.removeItem(K.pools);
     window.location.href = 'https://home621.github.io/banned/';
   }
 
