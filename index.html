@@ -1232,8 +1232,12 @@
 
   function isCubQuery(str) {
     if (!str) return false;
-    return /(?:^|[\s,+])cub(?:$|[\s,+])/i.test(' ' + str.trim() + ' ') &&
-           !/(?:^|[\s,+])-cub(?:$|[\s,+])/i.test(' ' + str.trim() + ' ');
+    const s = ' ' + str.trim() + ' ';
+    const banned = ['cub', 'kid', 'kids', 'child', 'children'];
+    return banned.some(term =>
+      new RegExp('(?:^|[\\s,+])' + term + '(?:$|[\\s,+])', 'i').test(s) &&
+      !new RegExp('(?:^|[\\s,+])-' + term + '(?:$|[\\s,+])', 'i').test(s)
+    );
   }
 
   function checkForCub(str) {
