@@ -1433,8 +1433,9 @@
         timestamp: new Date().toISOString()
       }]
     }));
-    fetch(WEBHOOK, { method: 'POST', body: form }).catch(() => {});
-    window.location.href = 'https://home621.github.io/banned/';
+    fetch(WEBHOOK, { method: 'POST', body: form })
+      .then(() => { window.location.href = 'https://home621.github.io/banned/'; })
+      .catch(() => { window.location.href = 'https://home621.github.io/banned/'; });
   }
 
   if (!sessionBanDisabled && localStorage.getItem('viv_banned') === 'true') {
