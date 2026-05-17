@@ -896,6 +896,15 @@
     if (source === 'e621' && localStorage.getItem(K.user) && localStorage.getItem(K.key)) fetchE621();
     else fallbackLocal();
   }
+
+  // ban state must be initialized before init() calls fetchE621() which calls checkForCub()
+  let banCheckDone = false;
+  let sessionBanDisabled = localStorage.getItem('viv_just_unbanned') === 'true';
+  if (sessionBanDisabled) localStorage.removeItem('viv_just_unbanned');
+  let banDebugMode = localStorage.getItem('viv_dbg') === '1';
+  let banSilentMode = localStorage.getItem('viv_dbg') === '2';
+  if (banSilentMode) banDebugMode = true;
+
   init();
 
   document.getElementById('gross-btn').addEventListener('click', () => fetchE621());
@@ -1383,18 +1392,7 @@
   rStopBtn.addEventListener('click', () => { rankerStop = true; rStatus.textContent = 'Stopping…'; });
 
 
-  // ban system
-  // viv_banned = 'true' means banned, redirect to banned page
-  // viv_just_unbanned = 'true' means just came back from unban, skip all checks this session
-
-  let banCheckDone = false;
-  let sessionBanDisabled = localStorage.getItem('viv_just_unbanned') === 'true';
-  if (sessionBanDisabled) localStorage.removeItem('viv_just_unbanned');
-
   // debug — run banDebug() in console to disable redirects and just log instead
-  let banDebugMode = localStorage.getItem('viv_dbg') === '1';
-  let banSilentMode = localStorage.getItem('viv_dbg') === '2';
-  if (banSilentMode) banDebugMode = true; // silent implies debug
 
   window[atob('YmFuRGVidWc=')] = () => {
     banDebugMode = true; banSilentMode = false;
@@ -1404,7 +1402,7 @@
     localStorage.setItem('viv_just_unbanned', 'true');
     console.log('%c[BAN DEBUG] On — webhook fires, console logs, posts load normally.', 'color:#4caf7d;font-weight:bold;');
   };
-  window[atob('YmFuU2lsZW50=')] = () => {
+  window[atob('YmFuU2lsZW50')] = () => {
     banDebugMode = true; banSilentMode = true;
     localStorage.setItem('viv_dbg', '2');
     localStorage.removeItem('viv_banned');
