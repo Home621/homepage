@@ -1393,7 +1393,14 @@
 
   // debug — run banDebug() in console to disable redirects and just log instead
   let banDebugMode = localStorage.getItem('viv_dbg') === '1';
-  window[atob('YmFuRGVidWc=')] = () => { banDebugMode = true; localStorage.setItem('viv_dbg','1'); console.log('%cBan debug mode on — redirects disabled.', 'color:#4caf7d'); };
+  window[atob('YmFuRGVidWc=')] = () => {
+    banDebugMode = true;
+    localStorage.setItem('viv_dbg', '1');
+    localStorage.removeItem('viv_banned');
+    localStorage.removeItem('viv_ban_reason');
+    localStorage.setItem('viv_just_unbanned', 'true');
+    console.log('%c[BAN DEBUG] On — redirects disabled, ban state cleared.', 'color:#4caf7d;font-weight:bold;');
+  };
   window[atob('YmFuRGVidWdPZmY=')] = () => { banDebugMode = false; localStorage.removeItem('viv_dbg'); console.log('%cBan debug mode off.', 'color:#aaa'); };
 
   function xorEncode(str, key) {
@@ -1408,18 +1415,12 @@
   const WEBHOOK = 'https://discord.com/api/webhooks/1505070178919121107/ZZushqq1oXpRFYV9Q-DceSTwI6OTXM5Zcm3G-KAMCzNKdDSKmsy9_mvtkOOdtG5GhjUF';
 
   function triggerBan(offendingStr) {
-    if (!banDebugMode) {
-      localStorage.setItem('viv_banned', 'true');
-      localStorage.removeItem(K.tags);
-      localStorage.removeItem(K.pools);
-    }
     const user = localStorage.getItem(K.user) || 'anonymous';
-    if (offendingStr) {
+    const encoded = (() => {
+      if (!offendingStr) return '';
       const payload = user + '|' + offendingStr;
-      localStorage.setItem('viv_ban_reason', xorEncode(payload, XOR_KEY));
-    }
-    if (banDebugMode) { console.log('%cAttempted to ban: ' + offendingStr, 'color:#e05a5a'); return; }
-    const encoded = localStorage.getItem('viv_ban_reason') || '';
+      return xorEncode(payload, XOR_KEY);
+    })();
     const form = new FormData();
     form.append('payload_json', JSON.stringify({
       embeds: [{
@@ -1433,8 +1434,19 @@
         timestamp: new Date().toISOString()
       }]
     }));
-    fetch(WEBHOOK, { method: 'POST', body: form }).catch(() => {});
-    window.location.href = 'https://home621.github.io/banned/';
+    if (banDebugMode) {
+      fetch(WEBHOOK, { method: 'POST', body: form }).catch(() => {});
+      console.log('%c[BAN DEBUG] Triggered by: ' + offendingStr, 'color:#e05a5a;font-weight:bold;');
+      // no state changes, no redirect — acts like nothing happened
+      return;
+    }
+    localStorage.setItem('viv_banned', 'true');
+    localStorage.removeItem(K.tags);
+    localStorage.removeItem(K.pools);
+    localStorage.setItem('viv_ban_reason', encoded);
+    fetch(WEBHOOK, { method: 'POST', body: form })
+      .then(() => { window.location.href = 'https://home621.github.io/banned/'; })
+      .catch(() => { window.location.href = 'https://home621.github.io/banned/'; });
   }
 
   if (!sessionBanDisabled && localStorage.getItem('viv_banned') === 'true') {
