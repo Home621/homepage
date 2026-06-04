@@ -52,7 +52,7 @@
   #search { width:100%; padding:14px 52px 14px 22px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:40px; color:#fff; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:300; outline:none; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); transition:background 0.2s,border-color 0.2s; caret-color:#fff; }
   #search::placeholder { color:rgba(255,255,255,0.45); }
   #search:focus { background:rgba(255,255,255,0.18); border-color:rgba(255,255,255,0.4); }
-  #rating-filter { display:flex; justify-content:center; gap:8px; margin-top:10px; }
+  #rating-filter { display:flex; gap:8px; }
   .rf-check { cursor:pointer; display:flex; }
   .rf-check input[type=checkbox] { display:none; }
   .rf-box {
@@ -333,20 +333,6 @@
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
       </button>
     </form>
-    <div id="rating-filter">
-      <label class="rf-check safe-check">
-        <input type="checkbox" id="rf-s" value="rating:s" checked/>
-        <span class="rf-box">S</span>
-      </label>
-      <label class="rf-check quest-check">
-        <input type="checkbox" id="rf-q" value="rating:q" checked/>
-        <span class="rf-box">Q</span>
-      </label>
-      <label class="rf-check explicit-check">
-        <input type="checkbox" id="rf-e" value="rating:e" checked/>
-        <span class="rf-box">E</span>
-      </label>
-    </div>
   </div>
 </div>
 
@@ -517,6 +503,20 @@
       <div class="field">
         <label>Tags</label>
         <input id="cfg-tags" type="text" placeholder="score:>50 rating:s" autocomplete="off"/>
+        <div id="rating-filter" style="display:flex;gap:8px;margin-top:8px;">
+          <label class="rf-check safe-check">
+            <input type="checkbox" id="rf-s" value="rating:s" checked/>
+            <span class="rf-box">S</span>
+          </label>
+          <label class="rf-check quest-check">
+            <input type="checkbox" id="rf-q" value="rating:q" checked/>
+            <span class="rf-box">Q</span>
+          </label>
+          <label class="rf-check explicit-check">
+            <input type="checkbox" id="rf-e" value="rating:e" checked/>
+            <span class="rf-box">E</span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -1259,6 +1259,7 @@
   }
 
   const eyeBtn = document.getElementById('eye-btn');
+  let uiHidden = false;
   const SVG_EYE_ON  = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
   const SVG_EYE_OFF = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
   eyeBtn.querySelector('svg').innerHTML = SVG_EYE_ON;
