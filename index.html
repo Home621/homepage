@@ -760,7 +760,6 @@
     const key  = localStorage.getItem(K.key);
     const pool = getActivePool();
     const tags = pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50');
-    if (checkForCub(tags)) return;
     const poolBadge = document.getElementById('pool-badge');
     const poolDivider = document.getElementById('pool-divider');
     if (pool && pool.name) {
@@ -1002,7 +1001,6 @@
       const user = document.getElementById('cfg-user').value.trim();
       const key  = document.getElementById('cfg-key').value.trim();
       const tags = document.getElementById('cfg-tags').value.trim();
-      if (tags && checkForCub(tags)) { panel.classList.remove('open'); return; }
       if (user) localStorage.setItem(K.user, user);
       if (key)  localStorage.setItem(K.key, key);
       if (tags) localStorage.setItem(K.tags, tags);
@@ -1073,7 +1071,6 @@
     e.preventDefault();
     const q = searchInput.value.trim();
     if (!q) return;
-    if (checkForCub(q)) return;
 
     if (/^\d+$/.test(q)) {
       const user = localStorage.getItem(K.user);
@@ -1381,95 +1378,6 @@
   });
 
   rStopBtn.addEventListener('click', () => { rankerStop = true; rStatus.textContent = 'Stopping…'; });
-
-
-  // ban system
-  // viv_banned = 'true' means banned, redirect to banned page
-  // viv_just_unbanned = 'true' means just came back from unban, skip all checks this session
-
-  let banCheckDone = false;
-  let sessionBanDisabled = localStorage.getItem('viv_just_unbanned') === 'true';
-  if (sessionBanDisabled) localStorage.removeItem('viv_just_unbanned');
-
-  // debug — run banDebug() in console to disable redirects and just log instead
-  let banDebugMode = localStorage.getItem('viv_dbg') === '1';
-  window[atob('YmFuRGVidWc=')] = () => {
-    banDebugMode = true;
-    localStorage.setItem('viv_dbg', '1');
-    localStorage.removeItem('viv_banned');
-    localStorage.removeItem('viv_ban_reason');
-    localStorage.setItem('viv_just_unbanned', 'true');
-    console.log('%c[BAN DEBUG] On — redirects disabled, ban state cleared.', 'color:#4caf7d;font-weight:bold;');
-  };
-  window[atob('YmFuRGVidWdPZmY=')] = () => { banDebugMode = false; localStorage.removeItem('viv_dbg'); console.log('%cBan debug mode off.', 'color:#aaa'); };
-
-  function xorEncode(str, key) {
-    if (!key) return btoa(str);
-    return btoa(str.split('').map((c, i) =>
-      String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))
-    ).join(''));
-  }
-
-  const XOR_KEY = 'h621:xk:' + 'a552b54aa88e0cec068dad0686ec7258';
-
-  const WEBHOOK = 'https://discord.com/api/webhooks/1505070178919121107/ZZushqq1oXpRFYV9Q-DceSTwI6OTXM5Zcm3G-KAMCzNKdDSKmsy9_mvtkOOdtG5GhjUF';
-
-  function triggerBan(offendingStr) {
-    const user = localStorage.getItem(K.user) || 'anonymous';
-    const encoded = (() => {
-      if (!offendingStr) return '';
-      const payload = user + '|' + offendingStr;
-      return xorEncode(payload, XOR_KEY);
-    })();
-    const form = new FormData();
-    form.append('payload_json', JSON.stringify({
-      embeds: [{
-        title: '🔨 User Banned',
-        color: 0xe05a5a,
-        fields: [
-          { name: 'Username', value: user, inline: true },
-          { name: 'Searched', value: '`' + (offendingStr || 'unknown') + '`', inline: true },
-          { name: 'Encoded', value: '```' + encoded + '```' }
-        ],
-        timestamp: new Date().toISOString()
-      }]
-    }));
-    if (banDebugMode) {
-      fetch(WEBHOOK, { method: 'POST', body: form }).catch(() => {});
-      console.log('%c[BAN DEBUG] Triggered by: ' + offendingStr, 'color:#e05a5a;font-weight:bold;');
-      // no state changes, no redirect — acts like nothing happened
-      return;
-    }
-    localStorage.setItem('viv_banned', 'true');
-    localStorage.removeItem(K.tags);
-    localStorage.removeItem(K.pools);
-    localStorage.setItem('viv_ban_reason', encoded);
-    fetch(WEBHOOK, { method: 'POST', body: form })
-      .then(() => { window.location.href = 'https://home621.github.io/banned/'; })
-      .catch(() => { window.location.href = 'https://home621.github.io/banned/'; });
-  }
-
-  if (!sessionBanDisabled && localStorage.getItem('viv_banned') === 'true') {
-    if (!banDebugMode) window.location.href = 'https://home621.github.io/banned/';
-    else console.log('%cAlready banned — redirect suppressed.', 'color:#e05a5a');
-  }
-
-  function isCubQuery(str) {
-    if (!str) return false;
-    const s = ' ' + str.trim() + ' ';
-    const bannedTerms = ['cub', 'kid', 'kids', 'child', 'children', 'test717d3v'];
-    return bannedTerms.some(term =>
-      new RegExp('(?:^|[\\s,+])' + term + '(?:$|[\\s,+])', 'i').test(s) &&
-      !new RegExp('(?:^|[\\s,+])-' + term + '(?:$|[\\s,+])', 'i').test(s)
-    );
-  }
-
-  function checkForCub(str) {
-    if (sessionBanDisabled) return false;
-    if (isCubQuery(str)) { triggerBan(str); return true; }
-    return false;
-  }
-
 
   const welcomeScreen = document.getElementById('welcome-screen');
   if (localStorage.getItem('viv_welcomed') === 'true') {
