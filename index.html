@@ -854,7 +854,8 @@
     sauceBtn.style.display = 'flex';
     currentPostId = post.id;
     hotBtn.style.display = 'flex';
-    hotBtn.classList.remove('faved');
+    if (post.is_favorited) hotBtn.classList.add('faved');
+    else hotBtn.classList.remove('faved');
     const artists = (post.tags && post.tags.artist) ? post.tags.artist.filter(a => a !== 'conditional_dnp' && a !== 'sound_warning') : [];
     const artistName = artists.map(a => a.replace(/_/g, ' ')).join(', ');
     document.getElementById('artist-val').textContent = artistName;
