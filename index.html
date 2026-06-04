@@ -52,7 +52,22 @@
   #search { width:100%; padding:14px 52px 14px 22px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:40px; color:#fff; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:300; outline:none; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); transition:background 0.2s,border-color 0.2s; caret-color:#fff; }
   #search::placeholder { color:rgba(255,255,255,0.45); }
   #search:focus { background:rgba(255,255,255,0.18); border-color:rgba(255,255,255,0.4); }
-  #search-btn { position:absolute; right:6px; top:50%; transform:translateY(-50%); width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.18); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; }
+  #rating-filter { display:flex; justify-content:center; gap:8px; margin-top:10px; }
+  .rf-check { cursor:pointer; display:flex; }
+  .rf-check input[type=checkbox] { display:none; }
+  .rf-box {
+    width:28px; height:28px; border-radius:6px; border:1px solid;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:500; letter-spacing:0.04em;
+    transition:opacity 0.15s, transform 0.1s;
+    user-select:none;
+  }
+  .rf-check input:not(:checked) + .rf-box { opacity:0.25; }
+  .rf-check input:checked + .rf-box { opacity:1; }
+  .rf-check:active .rf-box { transform:scale(0.9); }
+  .safe-check .rf-box    { background:rgba(80,200,120,0.15); border-color:rgba(80,220,120,0.4); color:rgba(80,220,120,0.9); }
+  .quest-check .rf-box   { background:rgba(240,180,60,0.15);  border-color:rgba(240,190,60,0.4); color:rgba(240,190,60,0.9); }
+  .explicit-check .rf-box { background:rgba(220,100,50,0.15); border-color:rgba(230,110,50,0.4); color:rgba(230,120,60,0.9); } top:50%; transform:translateY(-50%); width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.18); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; }
   #search-btn:hover { background:rgba(255,255,255,0.3); }
   #search-btn svg { width:16px; height:16px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 
@@ -318,6 +333,20 @@
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
       </button>
     </form>
+    <div id="rating-filter">
+      <label class="rf-check safe-check">
+        <input type="checkbox" id="rf-s" value="rating:s" checked/>
+        <span class="rf-box">S</span>
+      </label>
+      <label class="rf-check quest-check">
+        <input type="checkbox" id="rf-q" value="rating:q" checked/>
+        <span class="rf-box">Q</span>
+      </label>
+      <label class="rf-check explicit-check">
+        <input type="checkbox" id="rf-e" value="rating:e" checked/>
+        <span class="rf-box">E</span>
+      </label>
+    </div>
   </div>
 </div>
 
@@ -484,12 +513,10 @@
       <div class="field">
         <label>API key</label>
         <input id="cfg-key" type="password" placeholder="••••••••••••••••••••••••" autocomplete="off"/>
-        <span class="hint">Generate at e621.net → Account → Manage API Access</span>
       </div>
       <div class="field">
         <label>Tags</label>
         <input id="cfg-tags" type="text" placeholder="score:>50 rating:s" autocomplete="off"/>
-        <span class="hint">Space-separated. rating:s / rating:q / rating:e to filter.</span>
       </div>
     </div>
 
@@ -760,6 +787,10 @@
     const key  = localStorage.getItem(K.key);
     const pool = getActivePool();
     const tags = pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50');
+    const checkedRatings = [...document.querySelectorAll('#rating-filter input:checked')].map(i => i.value);
+    const ratingFilter = checkedRatings.length < 3 && checkedRatings.length > 0
+      ? ' ~' + checkedRatings.join(' ~')
+      : '';
     const poolBadge = document.getElementById('pool-badge');
     const poolDivider = document.getElementById('pool-divider');
     if (pool && pool.name) {
@@ -787,7 +818,7 @@
       }
     }
 
-    const params = new URLSearchParams({ limit:1, tags: tags + ' order:random -flash' });
+    const params = new URLSearchParams({ limit:1, tags: tags + ratingFilter + ' order:random -flash' });
     try {
       const res = await fetch(`${API}/posts.json?${params}`, { headers:{ 'User-Agent':'VivaldiStartpage/1.0', 'Authorization': auth } });
       if (res.status === 401) throw new Error('401');
