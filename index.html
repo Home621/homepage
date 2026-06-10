@@ -854,8 +854,19 @@
     sauceBtn.style.display = 'flex';
     currentPostId = post.id;
     hotBtn.style.display = 'flex';
-    if (post.is_favorited) hotBtn.classList.add('faved');
-    else hotBtn.classList.remove('faved');
+    hotBtn.classList.remove('faved');
+    // is_favorited is included in authenticated responses
+    if (post.is_favorited === true) {
+      hotBtn.classList.add('faved');
+    } else if (post.is_favorited === undefined && user && key) {
+      // fallback: check favorites endpoint directly
+      const auth = 'Basic ' + btoa(user + ':' + key);
+      fetch(`https://e621.net/favorites.json?user_id=${encodeURIComponent(user)}&limit=1&search[post_id]=${post.id}`, {
+        headers: { 'Authorization': auth, 'User-Agent': 'VivaldiStartpage/1.0' }
+      }).then(r => r.json()).then(d => {
+        if (d.posts && d.posts.length > 0) hotBtn.classList.add('faved');
+      }).catch(() => {});
+    }
     const artists = (post.tags && post.tags.artist) ? post.tags.artist.filter(a => a !== 'conditional_dnp' && a !== 'sound_warning') : [];
     const artistName = artists.map(a => a.replace(/_/g, ' ')).join(', ');
     document.getElementById('artist-val').textContent = artistName;
@@ -1221,14 +1232,15 @@
   // post history for back button — stores last 10 posts
   const postHistory = [];
   let historyPos = -1;
+  let navigatingBack = false;
 
   const backBtn = document.getElementById('back-btn');
 
   function pushHistory(post) {
-    // trim forward history if we navigated back
+    if (navigatingBack) return; // don't re-add when navigating back
     if (historyPos < postHistory.length - 1) postHistory.splice(historyPos + 1);
     postHistory.push(post);
-    if (postHistory.length > 20) postHistory.shift();
+    if (postHistory.length > 5) postHistory.shift();
     historyPos = postHistory.length - 1;
     backBtn.style.display = historyPos > 0 ? 'flex' : 'none';
   }
@@ -1236,11 +1248,13 @@
   backBtn.addEventListener('click', () => {
     if (historyPos <= 0) return;
     historyPos--;
+    navigatingBack = true;
     const post = postHistory[historyPos];
     const ext  = post.file.ext.toLowerCase();
     const type = ext === 'mp4' || ext === 'webm' ? 'video/mp4' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
     applyMedia(post.file.url, type);
     applyPost(post, localStorage.getItem(K.user), localStorage.getItem(K.key));
+    setTimeout(() => { navigatingBack = false; }, 100);
     backBtn.style.display = historyPos > 0 ? 'flex' : 'none';
   });
   const ui = document.getElementById('ui');
