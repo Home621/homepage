@@ -622,7 +622,7 @@
   const LOCAL_EXTS = ['mp4','gif','jpg','jpeg','png','webp'];
   // proxy URL — replace with your Cloudflare Worker URL after deploying
   const API = 'https://e621.net';
-  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration' };
+  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration', tint:'viv_tint', ratings:'viv_ratings', uiHidden:'viv_ui_hidden' };
 
   const bgCur     = document.getElementById('bg');
   const bgPrev    = document.getElementById('bg-prev');
@@ -659,6 +659,8 @@
   }
 
   function showVideo(url) {
+    bgVideo.pause();
+    bgVideoPrev.pause();
     clearImageTimer();
     bgVideoPrev.src = bgVideo.src || '';
     if (bgVideoPrev.src) { bgVideoPrev.style.display = 'block'; bgVideoPrev.play().catch(()=>{}); }
@@ -1087,6 +1089,11 @@
     document.getElementById('cfg-user').value = localStorage.getItem(K.user) || '';
     document.getElementById('cfg-key').value  = localStorage.getItem(K.key)  || '';
     document.getElementById('cfg-tags').value = localStorage.getItem(K.tags) || '';
+    const savedRatings = JSON.parse(localStorage.getItem(K.ratings) || '["rating:s","rating:q","rating:e"]');
+    ['rf-s','rf-q','rf-e'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.checked = savedRatings.includes(el.value);
+    });
     document.getElementById('cfg-start-muted').checked = localStorage.getItem(K.startMuted) !== 'false';
     document.getElementById('cfg-auto-skip').checked = localStorage.getItem(K.autoSkip) !== 'false';
     document.getElementById('cfg-comments').checked = localStorage.getItem(K.commentsVisible) !== 'false';
@@ -1131,6 +1138,10 @@
     if (seVal) localStorage.setItem(K.searchEngine, seVal);
     localStorage.setItem(K.autoSkip, document.getElementById('cfg-auto-skip').checked ? 'true' : 'false');
     localStorage.setItem(K.imgDuration, document.getElementById('img-duration-slider').value);
+    const checkedRatingSave = [...document.querySelectorAll('#rating-filter input:checked')].map(i => i.value);
+    localStorage.setItem(K.ratings, JSON.stringify(checkedRatingSave));
+    const tintEl = document.getElementById('tint-slider');
+    if (tintEl) localStorage.setItem(K.tint, tintEl.value);
     commentsVisible = document.getElementById('cfg-comments').checked;
     localStorage.setItem(K.commentsVisible, commentsVisible ? 'true' : 'false');
     applyCommentVisibility();
@@ -1400,13 +1411,15 @@
   }
 
   const eyeBtn = document.getElementById('eye-btn');
-  let uiHidden = false;
+  let uiHidden = localStorage.getItem(K.uiHidden) === 'true';
+  if (uiHidden) { ui.style.opacity = '0'; ui.style.pointerEvents = 'none'; }
   const SVG_EYE_ON  = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
   const SVG_EYE_OFF = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
-  eyeBtn.querySelector('svg').innerHTML = SVG_EYE_ON;
+  eyeBtn.querySelector('svg').innerHTML = uiHidden ? SVG_EYE_OFF : SVG_EYE_ON;
 
   eyeBtn.addEventListener('click', () => {
     uiHidden = !uiHidden;
+    localStorage.setItem(K.uiHidden, uiHidden ? 'true' : 'false');
     ui.style.opacity = uiHidden ? '0' : '1';
     ui.style.pointerEvents = uiHidden ? 'none' : '';
     eyeBtn.querySelector('svg').innerHTML = uiHidden ? SVG_EYE_OFF : SVG_EYE_ON;
