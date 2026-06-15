@@ -78,7 +78,6 @@
   #mute-btn { left:22px; display:none; }
 
   #ranker-backdrop { display:none; position:fixed; inset:0; z-index:59; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition:background 0.4s ease, backdrop-filter 0.4s ease; }
-  #ranker-backdrop.faded { background:rgba(0,0,0,0); }
   #ranker-backdrop.closing { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }  #ranker-backdrop.open { display:flex; }
   #ranker-panel {
     position:relative; top:auto; left:auto; transform:none;
@@ -183,7 +182,6 @@
   #comment-text { font-size:13px; font-weight:300; color:rgba(255,255,255,0.8); line-height:1.5; word-break:break-word; }
 
   #settings-panel { display:none; position:fixed; inset:0; z-index:50; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition:background 0.4s ease, backdrop-filter 0.4s ease; }
-  #settings-panel.faded { background:rgba(0,0,0,0); }
   #settings-panel.closing { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
   #settings-panel.open { display:flex; }
   #settings-box {
@@ -1122,7 +1120,6 @@
 
   function closeSettings() {
     settingsBox.style.display = 'none'; // hide box instantly
-    panel.classList.remove('faded');
     panel.classList.add('closing'); // fade backdrop
     setTimeout(() => {
       panel.classList.remove('open', 'closing');
@@ -1171,8 +1168,6 @@
   // Settings panel — draggable + close button
   const settingsBox = document.getElementById('settings-box');
   const settingsTitlebar = document.getElementById('settings-titlebar');
-  settingsBox.addEventListener('mouseenter', () => panel.classList.remove('faded'));
-  settingsBox.addEventListener('mouseleave', () => panel.classList.add('faded'));
   document.getElementById('settings-close').addEventListener('click', () => { closeSettings(); });
 
   let sDragOffX = 0, sDragOffY = 0, sDragging = false;
@@ -1442,8 +1437,6 @@
   const FAKE_ARTISTS = new Set(['conditional_dnp','sound_warning','animated','webm','flash','no_sound','video','corrupt','commentary_request']);
 
   // fade backdrop when mouse enters the window, restore when it leaves
-  rankerPanel.addEventListener('mouseenter', () => rankerBackdrop.classList.remove('faded'));
-  rankerPanel.addEventListener('mouseleave', () => rankerBackdrop.classList.add('faded'));
 
   function openRanker() {
     rankerPanel.style.position = '';
@@ -1452,13 +1445,12 @@
     rankerPanel.style.margin = '';
     rankerPanel.style.transform = '';
     rankerBackdrop.classList.add('open');
-    rankerBackdrop.classList.remove('faded');
     rankerPanel.classList.add('open');
   }
   function closeRanker() {
     rankerPanel.classList.remove('open'); // hide window instantly
     rankerBackdrop.classList.add('closing'); // start fade
-    setTimeout(() => rankerBackdrop.classList.remove('open', 'faded', 'closing'), 400);
+    setTimeout(() => rankerBackdrop.classList.remove('open', 'closing'), 400);
   }
 
   rankerBtn.addEventListener('click', () => rankerBackdrop.classList.contains('open') ? closeRanker() : openRanker());
