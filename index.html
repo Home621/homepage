@@ -78,7 +78,9 @@
   #mute-btn { left:22px; display:none; }
 
   #ranker-backdrop { display:none; position:fixed; inset:0; z-index:59; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition:background 0.4s ease, backdrop-filter 0.4s ease; }
-  #ranker-backdrop.closing { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }  #ranker-backdrop.open { display:flex; }
+  #ranker-backdrop.open { display:flex; }
+  #ranker-backdrop.opening { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
+  #ranker-backdrop.closing { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
   #ranker-panel {
     position:relative; top:auto; left:auto; transform:none;
     width:min(680px,92vw); max-height:85vh;
@@ -182,8 +184,9 @@
   #comment-text { font-size:13px; font-weight:300; color:rgba(255,255,255,0.8); line-height:1.5; word-break:break-word; }
 
   #settings-panel { display:none; position:fixed; inset:0; z-index:50; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition:background 0.4s ease, backdrop-filter 0.4s ease; }
-  #settings-panel.closing { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
   #settings-panel.open { display:flex; }
+  #settings-panel.opening { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
+  #settings-panel.closing { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
   #settings-box {
     position:relative;
     background:rgba(255,255,255,0.06);
@@ -568,10 +571,6 @@
         <input id="cfg-start-muted" type="checkbox"/><span class="cb-box"></span>
         <span>Start muted</span>
       </label>
-      <label class="check-row">
-        <input id="cfg-auto-skip" type="checkbox"/><span class="cb-box"></span>
-        <span>Auto-skip to next post</span>
-      </label>
     </div>
     <div class="field">
       <label>Default volume</label>
@@ -583,7 +582,7 @@
     <div class="field">
       <label>Image display duration</label>
       <div style="display:flex;align-items:center;gap:12px;">
-        <input type="range" id="img-duration-slider" min="3" max="60" step="1" value="7" style="flex:1;accent-color:rgba(255,255,255,0.6);cursor:pointer;"/>
+        <input type="range" id="img-duration-slider" min="3" max="61" step="1" value="7" style="flex:1;accent-color:rgba(255,255,255,0.6);cursor:pointer;"/>
         <span id="img-duration-val" style="font-size:13px;color:rgba(255,255,255,0.45);min-width:36px;text-align:right;">7s</span>
       </div>
     </div>
@@ -750,10 +749,15 @@
   let commentCycle = null;
   let imageTimer = null;
 
-  function autoSkipEnabled() { return localStorage.getItem(K.autoSkip) !== 'false'; }
+  function durationLabel(v) {
+    v = +v;
+    if (v >= 61) return 'Never';
+    return v + 's';
+  }
 
   function clearImageTimer() { clearTimeout(imageTimer); imageTimer = null; }
 
+  function autoSkipEnabled() { return (parseInt(localStorage.getItem(K.imgDuration)) || 7) < 61; }
   function getImgDuration() {
     return (parseInt(localStorage.getItem(K.imgDuration)) || 7) * 1000;
   }
@@ -1093,13 +1097,12 @@
       if (el) el.checked = savedRatings.includes(el.value);
     });
     document.getElementById('cfg-start-muted').checked = localStorage.getItem(K.startMuted) !== 'false';
-    document.getElementById('cfg-auto-skip').checked = localStorage.getItem(K.autoSkip) !== 'false';
     document.getElementById('cfg-comments').checked = localStorage.getItem(K.commentsVisible) !== 'false';
     const sv = localStorage.getItem(K.volume) || '100';
     volSlider.value = sv; volVal.textContent = sv + '%';
-    const sd = localStorage.getItem(K.imgDuration) || '7';
+    const sd = parseInt(localStorage.getItem(K.imgDuration)) || 7;
     document.getElementById('img-duration-slider').value = sd;
-    document.getElementById('img-duration-val').textContent = sd + 's';
+    document.getElementById('img-duration-val').textContent = durationLabel(sd);
     renderPools();
     setActiveSource(localStorage.getItem(K.source) || 'local');
     settingsBox.style.position = '';
@@ -1107,8 +1110,8 @@
     settingsBox.style.top = '';
     settingsBox.style.margin = '';
     settingsBox.style.transform = '';
-    panel.classList.add('open');
-    panel.classList.remove('faded');
+    panel.classList.add('open', 'opening');
+    requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.remove('opening')));
   });
   document.querySelectorAll('.src-opt').forEach(btn => btn.addEventListener('click', () => setActiveSource(btn.dataset.src)));
 
@@ -1133,7 +1136,6 @@
     localStorage.setItem(K.startMuted, document.getElementById('cfg-start-muted').checked ? 'true' : 'false');
     const seVal = document.getElementById('cfg-search-engine')?.value;
     if (seVal) localStorage.setItem(K.searchEngine, seVal);
-    localStorage.setItem(K.autoSkip, document.getElementById('cfg-auto-skip').checked ? 'true' : 'false');
     localStorage.setItem(K.imgDuration, document.getElementById('img-duration-slider').value);
     const checkedRatingSave = [...document.querySelectorAll('#rating-filter input:checked')].map(i => i.value);
     localStorage.setItem(K.ratings, JSON.stringify(checkedRatingSave));
@@ -1357,8 +1359,18 @@
   applyCommentVisibility();
 
   // image duration slider live preview
-  document.getElementById('img-duration-slider').addEventListener('input', function() {
-    document.getElementById('img-duration-val').textContent = this.value + 's';
+  const imgDurSlider = document.getElementById('img-duration-slider');
+  const imgDurVal = document.getElementById('img-duration-val');
+
+  // Use raw 0-63 range internally, friction applied via pointer capture
+
+
+  const savedDur = parseInt(localStorage.getItem(K.imgDuration)) || 7;
+  imgDurSlider.value = savedDur;
+  imgDurVal.textContent = durationLabel(savedDur);
+
+  imgDurSlider.addEventListener('input', function() {
+    imgDurVal.textContent = durationLabel(+this.value);
   });
 
   // post history for back button — stores last 10 posts
@@ -1444,8 +1456,9 @@
     rankerPanel.style.top = '';
     rankerPanel.style.margin = '';
     rankerPanel.style.transform = '';
-    rankerBackdrop.classList.add('open');
+    rankerBackdrop.classList.add('open', 'opening');
     rankerPanel.classList.add('open');
+    requestAnimationFrame(() => requestAnimationFrame(() => rankerBackdrop.classList.remove('opening')));
   }
   function closeRanker() {
     rankerPanel.classList.remove('open'); // hide window instantly
