@@ -500,19 +500,19 @@
       <div class="field">
         <label>Tags</label>
         <input id="cfg-tags" type="text" placeholder="score:>50 rating:s" autocomplete="off"/>
-        <div id="rating-filter" style="display:flex;gap:8px;margin-top:8px;">
-          <label class="rf-check safe-check">
-            <input type="checkbox" id="rf-s" value="rating:s" checked/>
-            <span class="rf-box">S</span>
-          </label>
-          <label class="rf-check quest-check">
-            <input type="checkbox" id="rf-q" value="rating:q" checked/>
-            <span class="rf-box">Q</span>
-          </label>
-          <label class="rf-check explicit-check">
-            <input type="checkbox" id="rf-e" value="rating:e" checked/>
-            <span class="rf-box">E</span>
-          </label>
+        <div id="rating-filter" style="display:flex;gap:8px;margin-top:8px;justify-content:space-between;align-items:center;">
+          <div style="display:flex;gap:8px;">
+            <label class="rf-check safe-check">
+              <input type="checkbox" id="rf-s" value="rating:s" checked/><span class="rf-box">S</span>
+            </label>
+            <label class="rf-check quest-check">
+              <input type="checkbox" id="rf-q" value="rating:q" checked/><span class="rf-box">Q</span>
+            </label>
+            <label class="rf-check explicit-check">
+              <input type="checkbox" id="rf-e" value="rating:e" checked/><span class="rf-box">E</span>
+            </label>
+          </div>
+          <button id="favs-btn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;cursor:pointer;transition:all 0.15s;">favs?</button>
         </div>
       </div>
     </div>
@@ -724,15 +724,50 @@
     return (parseInt(localStorage.getItem(K.imgDuration)) || 7) * 1000;
   }
 
+  let currentMediaType = 'image';
+  let prefetchedPost = null;
+
+  async function prefetchNext() {
+    const user = localStorage.getItem(K.user);
+    const key  = localStorage.getItem(K.key);
+    if (!user || !key) return;
+    const pool = getActivePool();
+    const tags = pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50');
+    const checkedRatings = [...document.querySelectorAll('#rating-filter input:checked')].map(i => i.value);
+    const ratingFilter = checkedRatings.length < 3 && checkedRatings.length > 0 ? ' ~' + checkedRatings.join(' ~') : '';
+    const auth = 'Basic ' + btoa(user + ':' + key);
+    try {
+      const res = await fetch(`${API}/posts.json?${new URLSearchParams({ limit:1, tags: tags + ratingFilter + ' order:random -flash' })}`, {
+        headers: { 'User-Agent':'VivaldiStartpage/1.0', 'Authorization': auth }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const posts = (data.posts || []).filter(p => p.file && p.file.url);
+      if (!posts.length) return;
+      prefetchedPost = posts[0];
+      const ext = prefetchedPost.file.ext.toLowerCase();
+      if (ext !== 'mp4' && ext !== 'webm') {
+        const img = new Image();
+        img.src = prefetchedPost.file.url;
+      }
+    } catch(e) {}
+  }
+
   function startImageTimer() {
     clearImageTimer();
     if (!autoSkipEnabled()) return;
     imageTimer = setTimeout(() => {
-      bgBlur.classList.add('blurring');
-      setTimeout(() => {
+      const nextIsVideo = prefetchedPost && ['mp4','webm'].includes(prefetchedPost.file?.ext?.toLowerCase());
+      const useBlur = currentMediaType !== 'video' && !nextIsVideo;
+      if (useBlur) {
+        bgBlur.classList.add('blurring');
+        setTimeout(() => {
+          fetchE621();
+          setTimeout(() => bgBlur.classList.remove('blurring'), 2500);
+        }, 2500);
+      } else {
         fetchE621();
-        setTimeout(() => bgBlur.classList.remove('blurring'), 2500);
-      }, 2500);
+      }
     }, getImgDuration());
   }
 
@@ -817,6 +852,13 @@
 
     const params = new URLSearchParams({ limit:1, tags: tags + ratingFilter + ' order:random -flash' });
     try {
+      if (prefetchedPost) {
+        const post = prefetchedPost;
+        prefetchedPost = null;
+        applyPost(post, user, key);
+        prefetchNext();
+        return;
+      }
       const res = await fetch(`${API}/posts.json?${params}`, { headers:{ 'User-Agent':'VivaldiStartpage/1.0', 'Authorization': auth } });
       if (res.status === 401) throw new Error('401');
       if (res.status === 403) throw new Error('403');
@@ -828,6 +870,7 @@
       const posts = (data.posts || []).filter(p => p.file && p.file.url);
       if (!posts.length) { showError('No posts found for those tags — try different ones.'); fallbackLocal(); return; }
       applyPost(posts[0], user, key);
+      prefetchNext();
     } catch(e) {
       const m = e.message || '';
       if (m.includes('401')) showError('Wrong username or API key.');
@@ -845,6 +888,7 @@
   function applyPost(post, user, key) {
     const ext  = post.file.ext.toLowerCase();
     const type = ext === 'mp4' || ext === 'webm' ? 'video/mp4' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
+    currentMediaType = type === 'video/mp4' ? 'video' : 'image';
     applyMedia(post.file.url, type);
     pushHistory(post);
     sauceBtn.href = 'https://e621.net/posts/' + post.id;
@@ -937,7 +981,28 @@
   }
   init();
 
-  document.getElementById('gross-btn').addEventListener('click', () => fetchE621());
+  document.getElementById('gross-btn').addEventListener('click', () => { prefetchedPost = null; fetchE621(); });
+
+  // favs button — toggles between fav:<username> and saved tags
+  let favsActive = false;
+  let savedTagsBeforeFav = '';
+  document.getElementById('favs-btn').addEventListener('click', () => {
+    const tagsInput = document.getElementById('cfg-tags');
+    const user = localStorage.getItem(K.user) || '';
+    const btn = document.getElementById('favs-btn');
+    if (!favsActive) {
+      savedTagsBeforeFav = tagsInput.value;
+      tagsInput.value = user ? 'fav:' + user : 'fav:';
+      favsActive = true;
+      btn.style.color = 'rgba(255,255,255,0.75)';
+      btn.style.borderColor = 'rgba(255,255,255,0.3)';
+    } else {
+      tagsInput.value = savedTagsBeforeFav;
+      favsActive = false;
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }
+  });
 
   hotBtn.addEventListener('click', async () => {
     if (!currentPostId) return;
