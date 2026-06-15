@@ -77,9 +77,11 @@
 
   #mute-btn { left:22px; display:none; }
 
+  #ranker-backdrop { display:none; position:fixed; inset:0; z-index:59; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition:background 0.4s ease, backdrop-filter 0.4s ease; }
+  #ranker-backdrop.faded { background:rgba(0,0,0,0); }
+  #ranker-backdrop.closing { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }  #ranker-backdrop.open { display:flex; }
   #ranker-panel {
-    position:fixed; z-index:60;
-    top:50%; left:50%; transform:translate(-50%,-50%);
+    position:relative; top:auto; left:auto; transform:none;
     width:min(680px,92vw); max-height:85vh;
     background:rgba(255,255,255,0.06);
     border:1px solid rgba(255,255,255,0.1);
@@ -100,7 +102,8 @@
   #ranker-titlebar span { font-size:13px; font-weight:400; color:rgba(255,255,255,0.55); letter-spacing:0.06em; }
   #ranker-close { background:none; border:none; color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; line-height:1; padding:0 2px; transition:color 0.15s; }
   #ranker-close:hover { color:rgba(255,255,255,0.8); }
-  #ranker-body { display:flex; flex-direction:column; gap:14px; padding:18px; overflow-y:auto; flex:1; }
+  #ranker-body { display:flex; flex-direction:column; gap:14px; padding:18px; overflow-y:auto; flex:1; scrollbar-width:none; }
+  #ranker-body::-webkit-scrollbar { display:none; }
   .r-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .r-label { font-size:11px; color:rgba(255,255,255,0.3); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:4px; }
   .r-input { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:300; padding:8px 12px; outline:none; transition:border-color 0.2s; flex:1; min-width:0; }
@@ -179,9 +182,32 @@
   #comment-user { font-size:11px; font-weight:400; color:rgba(255,255,255,0.45); letter-spacing:0.06em; }
   #comment-text { font-size:13px; font-weight:300; color:rgba(255,255,255,0.8); line-height:1.5; word-break:break-word; }
 
-  #settings-panel { display:none; position:fixed; inset:0; z-index:50; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); }
+  #settings-panel { display:none; position:fixed; inset:0; z-index:50; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition:background 0.4s ease, backdrop-filter 0.4s ease; }
+  #settings-panel.faded { background:rgba(0,0,0,0); }
+  #settings-panel.closing { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
   #settings-panel.open { display:flex; }
-  #settings-box { background:#1a1a2e; border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:32px; width:min(460px,90vw); display:flex; flex-direction:column; gap:20px; max-height:90vh; overflow-y:auto; }
+  #settings-box {
+    position:relative;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px;
+    backdrop-filter:blur(40px) saturate(0.6); -webkit-backdrop-filter:blur(40px) saturate(0.6);
+    box-shadow:0 8px 48px rgba(0,0,0,0.35);
+    width:min(460px,90vw); max-height:90vh;
+    display:flex; flex-direction:column; gap:0;
+    overflow:hidden;
+  }
+  #settings-titlebar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px 12px; flex-shrink:0;
+    border-bottom:1px solid rgba(255,255,255,0.07);
+    cursor:move; user-select:none;
+  }
+  #settings-titlebar span { font-size:13px; font-weight:400; color:rgba(255,255,255,0.55); letter-spacing:0.06em; }
+  #settings-close { background:none; border:none; color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; line-height:1; padding:0 2px; transition:color 0.15s; }
+  #settings-close:hover { color:rgba(255,255,255,0.8); }
+  #settings-scroll { flex:1; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:20px; scrollbar-width:none; }
+  #settings-scroll::-webkit-scrollbar { display:none; }
   #settings-box h2 { font-size:16px; font-weight:400; color:#fff; letter-spacing:0.04em; }
   .field { display:flex; flex-direction:column; gap:6px; }
   .field label { font-size:11px; font-weight:400; color:rgba(255,255,255,0.45); letter-spacing:0.1em; text-transform:uppercase; }
@@ -376,6 +402,7 @@
   Cool shit
 </button>
 
+<div id="ranker-backdrop">
 <div id="ranker-panel">
   <div id="ranker-titlebar">
     <span>e621 Ranker</span>
@@ -438,6 +465,7 @@
     </div>
   </div>
 </div>
+</div><!-- end ranker-backdrop -->
 
 <button id="mute-btn" class="corner-btn" aria-label="Toggle mute">
   <svg id="mute-icon" viewBox="0 0 24 24">
@@ -455,6 +483,11 @@
 
 <div id="settings-panel">
   <div id="settings-box">
+    <div id="settings-titlebar">
+      <span>Wallpaper Settings</span>
+      <button id="settings-close">×</button>
+    </div>
+    <div id="settings-scroll">
     <h2>Settings</h2>
 
     <div class="field">
@@ -571,8 +604,9 @@
     <div class="hint">Each new post picks a random pool. Leave empty to use the Tags field above.</div>
     <div id="pools-list"></div>
     <button id="pool-add-btn" style="background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.15);border-radius:6px;color:rgba(255,255,255,0.35);font-family:'DM Sans',sans-serif;font-size:12px;padding:10px;cursor:pointer;transition:all 0.15s;text-align:center;width:100%;">+ Add pool</button>
-  </div>
-</div>
+    </div><!-- end settings-scroll -->
+  </div><!-- end settings-box -->
+</div><!-- end settings-panel -->
 
 <script>
   // base path for local wallpaper — set by user in settings, no hardcoded paths
@@ -818,7 +852,9 @@
     const user = localStorage.getItem(K.user);
     const key  = localStorage.getItem(K.key);
     const pool = getActivePool();
-    const tags = pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50');
+    const tags = favsActive
+      ? 'fav:' + (user || '')
+      : (pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50'));
     const checkedRatings = [...document.querySelectorAll('#rating-filter input:checked')].map(i => i.value);
     const ratingFilter = checkedRatings.length < 3 && checkedRatings.length > 0
       ? ' ~' + checkedRatings.join(' ~')
@@ -983,25 +1019,14 @@
 
   document.getElementById('gross-btn').addEventListener('click', () => { prefetchedPost = null; fetchE621(); });
 
-  // favs button — toggles between fav:<username> and saved tags
+  // favs button — toggles fav:<username> query without touching the visible tags input
   let favsActive = false;
-  let savedTagsBeforeFav = '';
   document.getElementById('favs-btn').addEventListener('click', () => {
-    const tagsInput = document.getElementById('cfg-tags');
-    const user = localStorage.getItem(K.user) || '';
+    favsActive = !favsActive;
     const btn = document.getElementById('favs-btn');
-    if (!favsActive) {
-      savedTagsBeforeFav = tagsInput.value;
-      tagsInput.value = user ? 'fav:' + user : 'fav:';
-      favsActive = true;
-      btn.style.color = 'rgba(255,255,255,0.75)';
-      btn.style.borderColor = 'rgba(255,255,255,0.3)';
-    } else {
-      tagsInput.value = savedTagsBeforeFav;
-      favsActive = false;
-      btn.style.color = '';
-      btn.style.borderColor = '';
-    }
+    btn.style.color = favsActive ? 'rgba(255,255,255,0.75)' : '';
+    btn.style.borderColor = favsActive ? 'rgba(255,255,255,0.3)' : '';
+    btn.style.background = favsActive ? 'rgba(255,255,255,0.1)' : '';
   });
 
   hotBtn.addEventListener('click', async () => {
@@ -1043,7 +1068,7 @@
       sauceBtn.style.display = 'none';
       clearInterval(commentCycle); commentBox.style.display = 'none';
       try { localStorage.setItem(K.wpData, e.target.result); localStorage.setItem(K.wpType, file.type); localStorage.setItem(K.source, 'local'); } catch(err) {}
-      panel.classList.remove('open');
+      closeSettings();
     };
     reader.readAsDataURL(file);
   });
@@ -1072,7 +1097,13 @@
     document.getElementById('img-duration-val').textContent = sd + 's';
     renderPools();
     setActiveSource(localStorage.getItem(K.source) || 'local');
+    settingsBox.style.position = '';
+    settingsBox.style.left = '';
+    settingsBox.style.top = '';
+    settingsBox.style.margin = '';
+    settingsBox.style.transform = '';
     panel.classList.add('open');
+    panel.classList.remove('faded');
   });
   document.querySelectorAll('.src-opt').forEach(btn => btn.addEventListener('click', () => setActiveSource(btn.dataset.src)));
 
@@ -1080,6 +1111,16 @@
     document.querySelectorAll('.src-opt').forEach(b => b.classList.toggle('active', b.dataset.src === src));
     document.getElementById('e621-fields').classList.toggle('visible', src === 'e621');
     document.getElementById('local-fields').classList.toggle('visible', src === 'local');
+  }
+
+  function closeSettings() {
+    settingsBox.style.display = 'none'; // hide box instantly
+    panel.classList.remove('faded');
+    panel.classList.add('closing'); // fade backdrop
+    setTimeout(() => {
+      panel.classList.remove('open', 'closing');
+      settingsBox.style.display = '';
+    }, 400);
   }
 
   function saveSettings() {
@@ -1113,9 +1154,32 @@
       sauceBtn.style.display = 'none';
       clearInterval(commentCycle); commentBox.style.display = 'none';
     }
-    panel.classList.remove('open');
+    closeSettings();
   }
 
+  // Settings panel — draggable + close button
+  const settingsBox = document.getElementById('settings-box');
+  const settingsTitlebar = document.getElementById('settings-titlebar');
+  settingsBox.addEventListener('mouseenter', () => panel.classList.remove('faded'));
+  settingsBox.addEventListener('mouseleave', () => panel.classList.add('faded'));
+  document.getElementById('settings-close').addEventListener('click', () => { closeSettings(); });
+
+  let sDragOffX = 0, sDragOffY = 0, sDragging = false;
+  settingsTitlebar.addEventListener('mousedown', e => {
+    sDragging = true;
+    const r = settingsBox.getBoundingClientRect();
+    sDragOffX = e.clientX - r.left; sDragOffY = e.clientY - r.top;
+    settingsBox.style.transform = 'none';
+    settingsBox.style.left = r.left + 'px'; settingsBox.style.top = r.top + 'px';
+    settingsBox.style.position = 'fixed';
+    settingsBox.style.margin = '0';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!sDragging) return;
+    settingsBox.style.left = (e.clientX - sDragOffX) + 'px';
+    settingsBox.style.top  = (e.clientY - sDragOffY) + 'px';
+  });
+  document.addEventListener('mouseup', () => { sDragging = false; });
   panel.addEventListener('click', e => { if (e.target === panel) saveSettings(); });
 
   function updateGreeting() {
@@ -1350,6 +1414,7 @@
 
   // Ranker
   const rankerPanel = document.getElementById('ranker-panel');
+  const rankerBackdrop = document.getElementById('ranker-backdrop');
   const rankerBtn   = document.getElementById('ranker-btn');
   const rankerClose = document.getElementById('ranker-close');
   const rSearchBtn  = document.getElementById('r-search-btn');
@@ -1363,18 +1428,41 @@
   const rCopyBtn    = document.getElementById('ranker-copy-btn');
   const FAKE_ARTISTS = new Set(['conditional_dnp','sound_warning','animated','webm','flash','no_sound','video','corrupt','commentary_request']);
 
-  rankerBtn.addEventListener('click', () => rankerPanel.classList.toggle('open'));
-  rankerClose.addEventListener('click', () => rankerPanel.classList.remove('open'));
+  // fade backdrop when mouse enters the window, restore when it leaves
+  rankerPanel.addEventListener('mouseenter', () => rankerBackdrop.classList.remove('faded'));
+  rankerPanel.addEventListener('mouseleave', () => rankerBackdrop.classList.add('faded'));
+
+  function openRanker() {
+    rankerPanel.style.position = '';
+    rankerPanel.style.left = '';
+    rankerPanel.style.top = '';
+    rankerPanel.style.margin = '';
+    rankerPanel.style.transform = '';
+    rankerBackdrop.classList.add('open');
+    rankerBackdrop.classList.remove('faded');
+    rankerPanel.classList.add('open');
+  }
+  function closeRanker() {
+    rankerPanel.classList.remove('open'); // hide window instantly
+    rankerBackdrop.classList.add('closing'); // start fade
+    setTimeout(() => rankerBackdrop.classList.remove('open', 'faded', 'closing'), 400);
+  }
+
+  rankerBtn.addEventListener('click', () => rankerBackdrop.classList.contains('open') ? closeRanker() : openRanker());
+  rankerClose.addEventListener('click', closeRanker);
 
   // Draggable
   let dragOffX = 0, dragOffY = 0, dragging = false;
   const titlebar = document.getElementById('ranker-titlebar');
   titlebar.addEventListener('mousedown', e => {
+    e.stopPropagation();
     dragging = true;
     const r = rankerPanel.getBoundingClientRect();
     dragOffX = e.clientX - r.left; dragOffY = e.clientY - r.top;
+    rankerPanel.style.position = 'fixed';
     rankerPanel.style.transform = 'none';
     rankerPanel.style.left = r.left + 'px'; rankerPanel.style.top = r.top + 'px';
+    rankerPanel.style.margin = '0';
   });
   document.addEventListener('mousemove', e => {
     if (!dragging) return;
@@ -1382,6 +1470,12 @@
     rankerPanel.style.top  = (e.clientY - dragOffY) + 'px';
   });
   document.addEventListener('mouseup', () => { dragging = false; });
+
+  // prevent backdrop click from firing right after drag ends
+  rankerBackdrop.addEventListener('click', e => {
+    if (dragging) return;
+    if (e.target === rankerBackdrop) closeRanker();
+  });
 
   let rankerStop = false;
 
