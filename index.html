@@ -10,7 +10,21 @@
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   :root { --ease: cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 
-  html, body { width:100%; height:100%; overflow:hidden; background:#0d0d0d; font-family:'DM Sans',sans-serif; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#0d0d0d; font-family:'DM Sans',sans-serif; position:relative; }
+
+  /* Layer 1 (bottommost): solid black base, always present */
+  #page-base-bg { position:fixed; inset:0; z-index:0; background:#0d0d0d; }
+
+  /* Layer 2: blurred + darkened fill, shown only in Fit mode */
+  #fit-backdrop {
+    position:fixed; inset:0; z-index:0;
+    background-size:cover; background-position:center; background-repeat:no-repeat;
+    background-color:#0d0d0d;
+    filter:blur(20px) brightness(0.5);
+    transform:scale(1.3);
+    display:none;
+  }
+  #fit-backdrop.active { display:block; }
 
   #bg-wrap { position:fixed; inset:-80px; z-index:0; will-change:transform; transition:transform 0.18s var(--ease); }
   #bg, #bg-prev {
@@ -19,6 +33,7 @@
     background-size:cover; background-position:center;
     background-color:#0d0d0d;
     transition:opacity 2s ease;
+    z-index:1;
   }
   #bg-prev { opacity:1; }
   #bg      { opacity:0; }
@@ -240,6 +255,8 @@
   .checks-group { display:flex; flex-direction:column; gap:12px; }
   #source-toggle { display:flex; gap:8px; }
   .src-opt { flex:1; padding:9px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:rgba(255,255,255,0.4); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; text-align:center; transition:all 0.15s; }
+  .dm-opt { flex:1; padding:9px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:rgba(255,255,255,0.4); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; text-align:center; transition:all 0.15s; }
+  .dm-opt.active { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.35); color:#fff; }
   .src-opt.active { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.35); color:#fff; }
   #e621-fields, #local-fields { display:none; }
   #e621-fields.visible, #local-fields.visible { display:flex; flex-direction:column; gap:16px; }
@@ -263,7 +280,48 @@
 
   #score-badge { position:fixed; top:22px; right:130px; z-index:10; display:none; align-items:center; gap:5px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; padding:5px 11px; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
   #score-badge #score-val { min-width:24px; text-align:center; }
+
+  #artist-more-btn {
+    position:fixed; z-index:10;
+    display:none; align-items:center;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px;
+    color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300;
+    padding:5px 11px; cursor:pointer;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    transition:background 0.2s,color 0.2s,border-color 0.2s;
+  }
+  #artist-more-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
+
+  #artist-strip {
+    display:none;
+    position:fixed; top:62px; right:260px; z-index:9;
+    width:280px; height:auto;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:12px;
+    backdrop-filter:blur(24px) saturate(0.6); -webkit-backdrop-filter:blur(24px) saturate(0.6);
+    box-shadow:0 8px 32px rgba(0,0,0,0.3);
+    flex-direction:column;
+    overflow:hidden;
+  }
+  #artist-strip.open { display:flex; }
+  #artist-strip-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0; cursor:move; user-select:none; }
+  #artist-strip-title { font-size:12px; font-weight:400; color:rgba(255,255,255,0.55); letter-spacing:0.04em; }
+  #artist-strip-close { background:none; border:none; color:rgba(255,255,255,0.3); font-size:16px; cursor:pointer; line-height:1; padding:0 2px; transition:color 0.15s; }
+  #artist-strip-close:hover { color:rgba(255,255,255,0.8); }
+  #artist-strip-scroll { display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(2,1fr); gap:6px; padding:10px; }
+  .artist-thumb { width:100%; aspect-ratio:1/1; border-radius:6px; overflow:hidden; cursor:pointer; position:relative; background:rgba(255,255,255,0.04); transition:opacity 0.15s; }
+  .artist-thumb:hover { opacity:0.8; }
+  .artist-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .artist-thumb.video-thumb::after { content:'▶'; position:absolute; bottom:3px; right:4px; font-size:9px; color:rgba(255,255,255,0.85); text-shadow:0 0 3px rgba(0,0,0,0.8); z-index:1; }
+  #artist-strip-empty { padding:20px; text-align:center; font-size:12px; color:rgba(255,255,255,0.35); grid-column:1/-1; }
   #rating-badge { font-size:10px; font-weight:400; padding:2px 5px; border-radius:4px; letter-spacing:0.06em; }
+  #artist-val span:hover { color:#fff; text-decoration:underline; }
+  #fit-screen-btn.toggle-active, #favs-btn.toggle-active {
+    background:rgba(255,255,255,0.85) !important;
+    border-color:rgba(255,255,255,0.9) !important;
+    color:#111 !important;
+  }
   #rating-badge.safe     { background:rgba(80,200,120,0.18); color:rgba(80,220,120,0.9); }
   #rating-badge.quest    { background:rgba(240,180,60,0.18);  color:rgba(240,190,60,0.9); }
   #rating-badge.explicit { background:rgba(220,70,70,0.18);   color:rgba(240,90,90,0.9); }
@@ -335,6 +393,8 @@
   </div>
 </div>
 
+<div id="page-base-bg"></div>
+<div id="fit-backdrop"></div>
 <div id="bg-wrap">
   <div id="bg-prev"></div>
   <div id="bg"></div>
@@ -381,13 +441,23 @@
 </button>
 
 
+<button id="artist-more-btn">more pls</button>
+
 <div id="score-badge">
   <span id="pool-badge" style="display:none;"></span>
   <span id="pool-divider" style="opacity:0.25;font-size:10px;display:none;">|</span>
-  <span id="artist-val" style="opacity:0.7;"></span>
+  <span id="artist-val" style="opacity:0.7;cursor:pointer;" title="View on e621"></span>
   <span id="artist-divider" style="opacity:0.25;font-size:10px;">|</span>
   <span id="rating-badge"></span>
   <span id="score-val">0</span>
+</div>
+
+<div id="artist-strip">
+  <div id="artist-strip-header">
+    <span id="artist-strip-title">From the artist</span>
+    <button id="artist-strip-close">×</button>
+  </div>
+  <div id="artist-strip-scroll"></div>
 </div>
 
 <button id="back-btn" title="Previous post">
@@ -522,6 +592,14 @@
       <button class="src-opt" data-src="local">Local file</button>
     </div>
 
+    <div class="field">
+      <label>Display mode</label>
+      <div id="display-mode-toggle" style="display:flex;gap:8px;">
+        <button class="dm-opt active" data-mode="cover" type="button">Fill</button>
+        <button class="dm-opt" data-mode="contain" type="button">Fit</button>
+      </div>
+    </div>
+
     <div id="e621-fields" class="visible">
       <div class="field">
         <label>e621 username</label>
@@ -546,7 +624,10 @@
               <input type="checkbox" id="rf-e" value="rating:e" checked/><span class="rf-box">E</span>
             </label>
           </div>
-          <button id="favs-btn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;cursor:pointer;transition:all 0.15s;">favs?</button>
+          <div style="display:flex;gap:6px;">
+            <button id="fit-screen-btn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;cursor:pointer;transition:all 0.15s;">fit screen</button>
+            <button id="favs-btn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;cursor:pointer;transition:all 0.15s;">favs?</button>
+          </div>
         </div>
       </div>
     </div>
@@ -619,7 +700,9 @@
   const LOCAL_EXTS = ['mp4','gif','jpg','jpeg','png','webp'];
   // proxy URL — replace with your Cloudflare Worker URL after deploying
   const API = 'https://e621.net';
-  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration', tint:'viv_tint', ratings:'viv_ratings', uiHidden:'viv_ui_hidden' };
+  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration', tint:'viv_tint', ratings:'viv_ratings', uiHidden:'viv_ui_hidden', displayMode:'viv_display_mode' };
+  let favsActive = localStorage.getItem('viv_favs_active') === 'true';
+  let fitScreenActive = localStorage.getItem('viv_fit_screen') === 'true';
 
   const bgCur     = document.getElementById('bg');
   const bgPrev    = document.getElementById('bg-prev');
@@ -628,12 +711,53 @@
   const bgGif     = document.getElementById('bg-gif');
   const bgGifPrev = document.getElementById('bg-gif-prev');
   const bgWrap    = document.getElementById('bg-wrap');
+  const fitBackdrop = document.getElementById('fit-backdrop');
+  let displayMode = localStorage.getItem(K.displayMode) || 'cover';
+  let lastImageUrl = null;
+
+  function setBackdropImage(url) {
+    if (!url) return;
+    lastImageUrl = url;
+    fitBackdrop.style.backgroundImage = 'none';
+    void fitBackdrop.offsetHeight; // force reflow
+    fitBackdrop.style.backgroundImage = 'url("' + url + '")';
+  }
+
+  function applyDisplayMode(mode) {
+    displayMode = mode;
+    const sizeVal = mode === 'contain' ? 'contain' : 'cover';
+    bgCur.style.backgroundSize = sizeVal;
+    bgPrev.style.backgroundSize = sizeVal;
+    bgVideo.style.objectFit = sizeVal;
+    bgVideoPrev.style.objectFit = sizeVal;
+    bgGif.style.objectFit = sizeVal;
+    bgGifPrev.style.objectFit = sizeVal;
+    if (mode === 'contain') {
+      fitBackdrop.classList.add('active');
+      if (lastImageUrl) fitBackdrop.style.backgroundImage = 'url("' + lastImageUrl + '")';
+    } else {
+      fitBackdrop.classList.remove('active');
+    }
+  }
+  applyDisplayMode(displayMode);
+
+  document.querySelectorAll('.dm-opt').forEach(btn => {
+    if (btn.dataset.mode === displayMode) { document.querySelectorAll('.dm-opt').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+    btn.addEventListener('click', () => {
+      localStorage.setItem(K.displayMode, btn.dataset.mode);
+      applyDisplayMode(btn.dataset.mode);
+      document.querySelectorAll('.dm-opt').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
   const muteBtn   = document.getElementById('mute-btn');
   const muteIcon  = document.getElementById('mute-icon');
   const muteLabel = document.getElementById('mute-label');
   const sauceBtn  = document.getElementById('sauce-btn');
   const hotBtn    = document.getElementById('hot-btn');
   let currentPostId = null;
+  let currentArtists = [];
   const settingsBtn = document.getElementById('settings-btn');
   const panel     = document.getElementById('settings-panel');
   const searchInput = document.getElementById('search');
@@ -714,7 +838,7 @@
         bgPrev.style.opacity = '0';
         setTimeout(() => { bgGifPrev.style.display = 'none'; bgGifPrev.style.opacity = '1'; }, 2200);
       });
-      bgGif._loopTimer = setTimeout(() => { if (autoSkipEnabled()) fetchE621(); }, 10000);
+      bgGif._loopTimer = setTimeout(() => { if (autoSkipEnabled()) fetchE621('gif-loop auto-skip'); }, 10000);
     };
     bgCur.style.backgroundImage = 'none'; bgVideo.style.opacity = '0'; bgVideo.style.display = 'none';
     muteBtn.style.display = 'none';
@@ -741,9 +865,10 @@
   }
 
   function applyMedia(url, type) {
-    if (type === 'video/mp4') return showVideo(url);
-    if (type === 'image/gif') return showGif(url);
-    return showImage(url);
+    if (type === 'video/mp4') { showVideo(url); return; }
+    if (type === 'image/gif') { showGif(url); setBackdropImage(url); return; }
+    showImage(url);
+    setBackdropImage(url);
   }
 
   let commentCycle = null;
@@ -763,48 +888,20 @@
   }
 
   let currentMediaType = 'image';
-  let prefetchedPost = null;
-
-  async function prefetchNext() {
-    const user = localStorage.getItem(K.user);
-    const key  = localStorage.getItem(K.key);
-    if (!user || !key) return;
-    const pool = getActivePool();
-    const tags = pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50');
-    const checkedRatings = [...document.querySelectorAll('#rating-filter input:checked')].map(i => i.value);
-    const ratingFilter = checkedRatings.length < 3 && checkedRatings.length > 0 ? ' ~' + checkedRatings.join(' ~') : '';
-    const auth = 'Basic ' + btoa(user + ':' + key);
-    try {
-      const res = await fetch(`${API}/posts.json?${new URLSearchParams({ limit:1, tags: tags + ratingFilter + ' order:random -flash' })}`, {
-        headers: { 'User-Agent':'VivaldiStartpage/1.0', 'Authorization': auth }
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      const posts = (data.posts || []).filter(p => p.file && p.file.url);
-      if (!posts.length) return;
-      prefetchedPost = posts[0];
-      const ext = prefetchedPost.file.ext.toLowerCase();
-      if (ext !== 'mp4' && ext !== 'webm') {
-        const img = new Image();
-        img.src = prefetchedPost.file.url;
-      }
-    } catch(e) {}
-  }
 
   function startImageTimer() {
     clearImageTimer();
     if (!autoSkipEnabled()) return;
     imageTimer = setTimeout(() => {
-      const nextIsVideo = prefetchedPost && ['mp4','webm'].includes(prefetchedPost.file?.ext?.toLowerCase());
-      const useBlur = currentMediaType !== 'video' && !nextIsVideo;
+      const useBlur = currentMediaType !== 'video';
       if (useBlur) {
         bgBlur.classList.add('blurring');
         setTimeout(() => {
-          fetchE621();
+          fetchE621('auto-skip');
           setTimeout(() => bgBlur.classList.remove('blurring'), 2500);
         }, 2500);
       } else {
-        fetchE621();
+        fetchE621('auto-skip');
       }
     }, getImgDuration());
   }
@@ -814,7 +911,7 @@
     if (!autoSkipEnabled() || !bgVideo.duration) return;
     if (bgVideo.currentTime >= bgVideo.duration - 0.5 && !videoSkipArmed) {
       videoSkipArmed = true;
-      fetchE621();
+      fetchE621('video-end auto-skip');
     }
   });
   bgVideo.addEventListener('play', () => { videoSkipArmed = false; });
@@ -852,7 +949,8 @@
     commentCycle = setInterval(show, 4000);
   }
 
-  async function fetchE621() {
+  async function fetchE621(callSource) {
+    document.getElementById('gross-btn').style.display = 'flex';
     const user = localStorage.getItem(K.user);
     const key  = localStorage.getItem(K.key);
     const pool = getActivePool();
@@ -860,9 +958,9 @@
       ? 'fav:' + (user || '')
       : (pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50'));
     const checkedRatings = [...document.querySelectorAll('#rating-filter input:checked')].map(i => i.value);
-    const ratingFilter = checkedRatings.length < 3 && checkedRatings.length > 0
-      ? ' ~' + checkedRatings.join(' ~')
-      : '';
+    const ratingFilter = checkedRatings.length === 1
+      ? ' ' + checkedRatings[0]
+      : (checkedRatings.length === 2 ? ' ~' + checkedRatings.join(' ~') : '');
     const poolBadge = document.getElementById('pool-badge');
     const poolDivider = document.getElementById('pool-divider');
     if (pool && pool.name) {
@@ -890,15 +988,11 @@
       }
     }
 
-    const params = new URLSearchParams({ limit:1, tags: tags + ratingFilter + ' order:random -flash' });
+    const fullTags = tags + ratingFilter + getFitScreenRatioFilter() + ' order:random -flash';
+    const params = new URLSearchParams({ limit:1, tags: fullTags });
+    const label = callSource || 'gross';
     try {
-      if (prefetchedPost) {
-        const post = prefetchedPost;
-        prefetchedPost = null;
-        applyPost(post, user, key);
-        prefetchNext();
-        return;
-      }
+      console.log(label + ' search:' + fullTags);
       const res = await fetch(`${API}/posts.json?${params}`, { headers:{ 'User-Agent':'VivaldiStartpage/1.0', 'Authorization': auth } });
       if (res.status === 401) throw new Error('401');
       if (res.status === 403) throw new Error('403');
@@ -910,7 +1004,6 @@
       const posts = (data.posts || []).filter(p => p.file && p.file.url);
       if (!posts.length) { showError('No posts found for those tags — try different ones.'); fallbackLocal(); return; }
       applyPost(posts[0], user, key);
-      prefetchNext();
     } catch(e) {
       const m = e.message || '';
       if (m.includes('401')) showError('Wrong username or API key.');
@@ -926,9 +1019,14 @@
   }
 
   function applyPost(post, user, key) {
+    console.log('post id:' + post.id);
     const ext  = post.file.ext.toLowerCase();
     const type = ext === 'mp4' || ext === 'webm' ? 'video/mp4' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
     currentMediaType = type === 'video/mp4' ? 'video' : 'image';
+    if (type === 'video/mp4') {
+      const thumb = (post.sample && post.sample.url) || (post.preview && post.preview.url) || null;
+      setBackdropImage(thumb);
+    }
     applyMedia(post.file.url, type);
     pushHistory(post);
     sauceBtn.href = 'https://e621.net/posts/' + post.id;
@@ -949,9 +1047,35 @@
       }).catch(() => {});
     }
     const artists = (post.tags && post.tags.artist) ? post.tags.artist.filter(a => a !== 'conditional_dnp' && a !== 'sound_warning') : [];
+    const artistValEl = document.getElementById('artist-val');
+    artistValEl.innerHTML = '';
+    artists.forEach((a, i) => {
+      if (i > 0) artistValEl.appendChild(document.createTextNode(', '));
+      const span = document.createElement('span');
+      span.textContent = a.replace(/_/g, ' ');
+      span.style.cursor = 'pointer';
+      span.title = 'View on e621';
+      span.addEventListener('click', e => {
+        e.stopPropagation();
+        window.open('https://e621.net/posts?tags=' + encodeURIComponent(a), '_blank');
+      });
+      artistValEl.appendChild(span);
+    });
     const artistName = artists.map(a => a.replace(/_/g, ' ')).join(', ');
-    document.getElementById('artist-val').textContent = artistName;
     document.getElementById('artist-divider').style.display = artistName ? '' : 'none';
+    const moreBtn = document.getElementById('artist-more-btn');
+    if (artistName) {
+      moreBtn.style.visibility = 'hidden';
+      moreBtn.style.display = 'flex';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        positionMoreBtn();
+        moreBtn.style.visibility = 'visible';
+      }));
+    } else {
+      moreBtn.style.display = 'none';
+    }
+    currentArtists = artists;
+    document.getElementById('artist-strip').classList.remove('open');
     const score = (post.score && post.score.total !== undefined) ? post.score.total : null;
     const scoreEl = document.getElementById('score-val');
     scoreEl.textContent = score !== null ? score : '?';
@@ -989,6 +1113,9 @@
     commentBox.style.display = 'none';
     sauceBtn.style.display = 'none';
     hotBtn.style.display = 'none';
+    document.getElementById('gross-btn').style.display = 'none';
+    document.getElementById('artist-more-btn').style.display = 'none';
+    document.getElementById('artist-strip').classList.remove('open');
     currentPostId = null;
     document.getElementById('score-badge').style.display = 'none';
     document.getElementById('pool-badge').style.display = 'none';
@@ -1016,22 +1143,53 @@
 
   function init() {
     const source = localStorage.getItem(K.source) || 'local';
-    if (source === 'e621' && localStorage.getItem(K.user) && localStorage.getItem(K.key)) fetchE621();
+    if (source === 'e621' && localStorage.getItem(K.user) && localStorage.getItem(K.key)) fetchE621('startup');
     else fallbackLocal();
   }
   init();
 
-  document.getElementById('gross-btn').addEventListener('click', () => { prefetchedPost = null; fetchE621(); });
+  window.addEventListener('load', () => {
+    const source = localStorage.getItem(K.source) || 'local';
+    if (source === 'e621' && localStorage.getItem(K.user) && localStorage.getItem(K.key)) {
+      fetchE621('startup (window load)');
+    }
+  });
+
+  document.getElementById('gross-btn').addEventListener('click', () => fetchE621());
 
   // favs button — toggles fav:<username> query without touching the visible tags input
-  let favsActive = false;
+  function updateFavsBtn() {
+    const btn = document.getElementById('favs-btn');
+    btn.classList.toggle('toggle-active', favsActive);
+  }
+  updateFavsBtn();
   document.getElementById('favs-btn').addEventListener('click', () => {
     favsActive = !favsActive;
-    const btn = document.getElementById('favs-btn');
-    btn.style.color = favsActive ? 'rgba(255,255,255,0.75)' : '';
-    btn.style.borderColor = favsActive ? 'rgba(255,255,255,0.3)' : '';
-    btn.style.background = favsActive ? 'rgba(255,255,255,0.1)' : '';
+    localStorage.setItem('viv_favs_active', favsActive ? 'true' : 'false');
+    updateFavsBtn();
   });
+
+  // fit screen button — silently appends aspect-ratio tags matching the screen, plus universal 1:1
+  function updateFitScreenBtn() {
+    const btn = document.getElementById('fit-screen-btn');
+    btn.classList.toggle('toggle-active', fitScreenActive);
+  }
+  updateFitScreenBtn();
+  document.getElementById('fit-screen-btn').addEventListener('click', () => {
+    fitScreenActive = !fitScreenActive;
+    localStorage.setItem('viv_fit_screen', fitScreenActive ? 'true' : 'false');
+    updateFitScreenBtn();
+  });
+
+  function getFitScreenRatioFilter() {
+    if (!fitScreenActive) return '';
+    const isPortrait = window.innerHeight > window.innerWidth;
+    // common e621 ratio: tags in W:H form — always include 1:1 (universal), plus orientation-matched ratios
+    const portraitRatios  = ['ratio:1:2', 'ratio:2:3', 'ratio:3:4', 'ratio:9:16', 'ratio:10:16'];
+    const landscapeRatios = ['ratio:2:1', 'ratio:3:2', 'ratio:4:3', 'ratio:16:9', 'ratio:16:10'];
+    const ratios = ['ratio:1:1', ...(isPortrait ? portraitRatios : landscapeRatios)];
+    return ' ~' + ratios.join(' ~');
+  }
 
   hotBtn.addEventListener('click', async () => {
     if (!currentPostId) return;
@@ -1379,6 +1537,81 @@
   let navigatingBack = false;
 
   const backBtn = document.getElementById('back-btn');
+
+  // "From the artist" strip
+  const artistStrip = document.getElementById('artist-strip');
+  const artistStripScroll = document.getElementById('artist-strip-scroll');
+  const moreBtnEl = document.getElementById('artist-more-btn');
+  document.getElementById('artist-strip-close').addEventListener('click', () => artistStrip.classList.remove('open'));
+
+  // draggable
+  let asDragOffX = 0, asDragOffY = 0, asDragging = false;
+  const artistStripHeader = document.getElementById('artist-strip-header');
+  artistStripHeader.addEventListener('mousedown', e => {
+    asDragging = true;
+    const r = artistStrip.getBoundingClientRect();
+    asDragOffX = e.clientX - r.left; asDragOffY = e.clientY - r.top;
+    artistStrip.style.position = 'fixed';
+    artistStrip.style.left = r.left + 'px'; artistStrip.style.top = r.top + 'px';
+    artistStrip.style.right = 'auto';
+    artistStrip.style.margin = '0';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!asDragging) return;
+    artistStrip.style.left = (e.clientX - asDragOffX) + 'px';
+    artistStrip.style.top  = (e.clientY - asDragOffY) + 'px';
+  });
+  document.addEventListener('mouseup', () => { asDragging = false; });
+
+  function positionMoreBtn() {
+    const badge = document.getElementById('score-badge');
+    const r = badge.getBoundingClientRect();
+    moreBtnEl.style.top = r.top + 'px';
+    moreBtnEl.style.right = (window.innerWidth - r.left + 8) + 'px';
+  }
+  window.addEventListener('resize', () => { if (moreBtnEl.style.display !== 'none') positionMoreBtn(); });
+
+  moreBtnEl.addEventListener('click', async () => {
+    if (!currentArtists.length) return;
+    if (artistStrip.classList.contains('open')) { artistStrip.classList.remove('open'); return; }
+    artistStrip.style.position = '';
+    artistStrip.style.left = '';
+    artistStrip.style.top = '';
+    artistStrip.style.right = '';
+    artistStrip.style.margin = '';
+    const user = localStorage.getItem(K.user), key = localStorage.getItem(K.key);
+    if (!user || !key) return;
+    artistStripScroll.innerHTML = '<div id="artist-strip-empty">Loading…</div>';
+    artistStrip.classList.add('open');
+    const auth = 'Basic ' + btoa(user + ':' + key);
+    const tagQuery = currentArtists.map(a => a).join(' ~') ;
+    try {
+      const res = await fetch(`${API}/posts.json?${new URLSearchParams({ limit:6, tags: currentArtists[0] + ' order:random -flash' })}`, {
+        headers: { 'User-Agent':'VivaldiStartpage/1.0', 'Authorization': auth }
+      });
+      const data = await res.json();
+      const posts = (data.posts || []).filter(p => p.file && (p.file.url || p.preview?.url));
+      if (!posts.length) { artistStripScroll.innerHTML = '<div id="artist-strip-empty">No other posts found.</div>'; return; }
+      artistStripScroll.innerHTML = '';
+      posts.forEach(p => {
+        const thumb = document.createElement('div');
+        const isVideo = ['mp4','webm'].includes((p.file.ext||'').toLowerCase());
+        thumb.className = 'artist-thumb' + (isVideo ? ' video-thumb' : '');
+        const img = document.createElement('img');
+        img.src = p.preview?.url || p.sample?.url || p.file.url || '';
+        img.loading = 'lazy';
+        img.onerror = () => { thumb.style.background = 'rgba(255,255,255,0.08)'; img.style.display = 'none'; };
+        thumb.appendChild(img);
+        thumb.addEventListener('click', () => {
+          applyPost(p, user, key);
+          artistStrip.classList.remove('open');
+        });
+        artistStripScroll.appendChild(thumb);
+      });
+    } catch(e) {
+      artistStripScroll.innerHTML = '<div id="artist-strip-empty">Failed to load.</div>';
+    }
+  });
 
   function pushHistory(post) {
     if (navigatingBack) return; // don't re-add when navigating back
