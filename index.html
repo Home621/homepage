@@ -12,9 +12,6 @@
 
   html, body { width:100%; height:100%; overflow:hidden; background:#0d0d0d; font-family:'DM Sans',sans-serif; position:relative; }
 
-  /* Layer 1 (bottommost): solid black base, always present */
-  #page-base-bg { position:fixed; inset:0; z-index:0; background:#0d0d0d; }
-
   /* Layer 2: blurred + darkened fill, shown only in Fit mode */
   #fit-backdrop {
     position:fixed; inset:0; z-index:0;
@@ -90,7 +87,7 @@
   .corner-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
   .corner-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 
-  #mute-btn { left:22px; display:none; }
+  #mute-btn { left:22px; bottom:18px; display:none; }
 
   #ranker-backdrop { display:none; position:fixed; inset:0; z-index:59; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition:background 0.4s ease, backdrop-filter 0.4s ease; }
   #ranker-backdrop.open { display:flex; }
@@ -163,7 +160,10 @@
   #eye-btn { position:fixed; bottom:62px; left:22px; z-index:10; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
   #eye-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
   #eye-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-  #back-btn { position:fixed; bottom:106px; left:22px; z-index:10; display:none; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
+  #download-btn { position:fixed; bottom:106px; left:22px; z-index:10; display:none; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
+  #download-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
+  #download-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  #back-btn { position:fixed; bottom:150px; left:22px; z-index:10; display:none; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
   #back-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
   #back-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
   #settings-btn { right:22px; }
@@ -265,18 +265,74 @@
     #clock-time { font-size: clamp(48px, 16vw, 80px); }
     #clock-date { font-size: 12px; }
     #search { font-size: 14px; padding: 12px 48px 12px 18px; }
-    .corner-btn { font-size: 11px; padding: 6px 10px; }
-    #sauce-btn, #gross-btn, #hot-btn { font-size: 11px; padding: 6px 10px; }
-    #score-badge { font-size: 11px; padding: 5px 9px; right: 8px; top: 8px; }
-    #sauce-btn { top: 8px; right: 8px; }
-    #gross-btn { top: 44px; right: 8px; }
-    #hot-btn   { top: 80px; right: 8px; }
     #comment-box { max-width: min(260px, 60vw); font-size: 12px; top: 8px; left: 8px; }
-    #mute-btn  { left: 8px; bottom: 8px; }
-    #eye-btn   { left: 8px; bottom: 52px; }
-    #settings-btn { right: 8px; bottom: 8px; }
     #settings-box { padding: 20px; gap: 16px; }
+    #artist-strip { top:50% !important; left:50% !important; right:auto !important; transform:translate(-50%,-50%) !important; width:90vw; max-width:340px; }
+
+    /* hide all non-essential buttons on mobile */
+    #sauce-btn, #gross-btn, #hot-btn, #score-badge, #artist-more-btn,
+    #back-btn, #download-btn, #settings-btn, #ranker-btn, #mute-btn { display: none !important; }
+
+    /* keep eye-btn and mute-btn visible */
+    #eye-btn  { left: 8px; bottom: 8px; }
+    #mute-btn { left: 8px; bottom: 52px; }
+
+    /* show the ... button */
+    #mobile-menu-btn { display: flex !important; }
   }
+
+  #mobile-menu-btn {
+    display: none;
+    position: fixed; bottom: 8px; right: 8px; z-index: 20;
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.7); font-size: 18px; font-family: 'DM Sans',sans-serif;
+    cursor: pointer; align-items: center; justify-content: center;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    transition: background 0.2s;
+    letter-spacing: 0.05em;
+  }
+  #mobile-menu-btn:hover { background: rgba(255,255,255,0.18); }
+
+  #mobile-drawer {
+    display: none;
+    position: fixed; bottom: 56px; right: 8px; z-index: 19;
+    width: 220px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 16px;
+    backdrop-filter: blur(30px) saturate(0.7); -webkit-backdrop-filter: blur(30px) saturate(0.7);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    flex-direction: column;
+    overflow: hidden;
+    padding: 10px;
+    gap: 8px;
+  }
+  #mobile-drawer.open { display: flex; }
+  #mob-score {
+    font-size: 11px; color: rgba(255,255,255,0.4);
+    padding: 2px 4px 6px; text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    letter-spacing: 0.04em;
+  }
+  #mob-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .mob-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; color: rgba(255,255,255,0.65);
+    font-family: 'DM Sans',sans-serif; font-size: 11px; font-weight: 300;
+    padding: 10px 4px; cursor: pointer; letter-spacing: 0.03em;
+    transition: background 0.15s, color 0.15s;
+    width: 100%;
+  }
+  .mob-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .mob-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .mob-btn.faved { color: #f5c842; border-color: rgba(245,200,66,0.35); }
 
   #score-badge { position:fixed; top:22px; right:130px; z-index:10; display:none; align-items:center; gap:5px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; padding:5px 11px; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
   #score-badge #score-val { min-width:24px; text-align:center; }
@@ -393,7 +449,6 @@
   </div>
 </div>
 
-<div id="page-base-bg"></div>
 <div id="fit-backdrop"></div>
 <div id="bg-wrap">
   <div id="bg-prev"></div>
@@ -464,9 +519,56 @@
   <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
 </button>
 
+<button id="download-btn" title="Download post">
+  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+</button>
+
 <button id="eye-btn" title="Toggle UI">
   <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
 </button>
+
+<button id="mobile-menu-btn" title="More">···</button>
+<div id="mobile-drawer">
+  <div id="mob-score"></div>
+  <div id="mob-grid">
+    <button class="mob-btn" id="mob-sauce-btn">
+      <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Sauce
+    </button>
+    <button class="mob-btn" id="mob-gross-btn">
+      <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+      Gross
+    </button>
+    <button class="mob-btn" id="mob-hot-btn">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Hot
+    </button>
+    <button class="mob-btn" id="mob-back-btn">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+    <button class="mob-btn" id="mob-download-btn">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download
+    </button>
+    <button class="mob-btn" id="mob-mute-btn">
+      <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+      Mute
+    </button>
+    <button class="mob-btn" id="mob-artist-btn">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.5 8.5 0 0 1 13 0"/></svg>
+      More pls
+    </button>
+    <button class="mob-btn" id="mob-ranker-btn">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+      Cool shit
+    </button>
+    <button class="mob-btn" id="mob-settings-btn">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </button>
+  </div>
+</div>
 
 <button id="ranker-btn" style="position:fixed; right:22px; bottom:62px; z-index:10; display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; letter-spacing:0.06em; padding:7px 13px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; width:fit-content;">
   <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
@@ -625,7 +727,7 @@
             </label>
           </div>
           <div style="display:flex;gap:6px;">
-            <button id="fit-screen-btn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;cursor:pointer;transition:all 0.15s;">fit screen</button>
+            <button id="fit-screen-btn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;cursor:pointer;transition:all 0.15s;">fit aspect ratio</button>
             <button id="favs-btn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;cursor:pointer;transition:all 0.15s;">favs?</button>
           </div>
         </div>
@@ -652,6 +754,10 @@
         <input id="cfg-start-muted" type="checkbox"/><span class="cb-box"></span>
         <span>Start muted</span>
       </label>
+      <label class="check-row">
+        <input id="cfg-auto-skip" type="checkbox"/><span class="cb-box"></span>
+        <span>Auto-skip to next post</span>
+      </label>
     </div>
     <div class="field">
       <label>Default volume</label>
@@ -660,11 +766,11 @@
         <span id="volume-val" style="font-size:13px;color:rgba(255,255,255,0.45);min-width:36px;text-align:right;">100%</span>
       </div>
     </div>
-    <div class="field">
+    <div class="field" id="img-duration-field" style="display:none;">
       <label>Image display duration</label>
       <div style="display:flex;align-items:center;gap:12px;">
-        <input type="range" id="img-duration-slider" min="3" max="61" step="1" value="7" style="flex:1;accent-color:rgba(255,255,255,0.6);cursor:pointer;"/>
-        <span id="img-duration-val" style="font-size:13px;color:rgba(255,255,255,0.45);min-width:36px;text-align:right;">7s</span>
+        <input type="number" id="img-duration-input" min="1" max="3600" step="1" value="7" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.7);font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 10px;outline:none;"/>
+        <span style="font-size:13px;color:rgba(255,255,255,0.45);">seconds</span>
       </div>
     </div>
 
@@ -711,7 +817,15 @@
   const bgGif     = document.getElementById('bg-gif');
   const bgGifPrev = document.getElementById('bg-gif-prev');
   const bgWrap    = document.getElementById('bg-wrap');
-  const fitBackdrop = document.getElementById('fit-backdrop');
+  const fitBackdrop   = document.getElementById('fit-backdrop');
+  const grossBtn      = document.getElementById('gross-btn');
+  const scoreBadge    = document.getElementById('score-badge');
+  const poolBadge     = document.getElementById('pool-badge');
+  const poolDivider   = document.getElementById('pool-divider');
+  const artistDivider = document.getElementById('artist-divider');
+  const artistStrip_  = document.getElementById('artist-strip');
+  const scoreVal      = document.getElementById('score-val');
+  const ratingBadge   = document.getElementById('rating-badge');
   let displayMode = localStorage.getItem(K.displayMode) || 'cover';
   let lastImageUrl = null;
 
@@ -754,8 +868,20 @@
   const muteBtn   = document.getElementById('mute-btn');
   const muteIcon  = document.getElementById('mute-icon');
   const muteLabel = document.getElementById('mute-label');
-  const sauceBtn  = document.getElementById('sauce-btn');
-  const hotBtn    = document.getElementById('hot-btn');
+  const sauceBtn    = document.getElementById('sauce-btn');
+  const hotBtn      = document.getElementById('hot-btn');
+  const downloadBtn = document.getElementById('download-btn');
+  let currentFileUrl = null;
+  let currentFileExt = null;
+
+  downloadBtn.addEventListener('click', () => {
+    if (!currentFileUrl) return;
+    const a = document.createElement('a');
+    a.href = currentFileUrl;
+    a.download = 'e621_' + (currentPostId || 'post') + '.' + (currentFileExt || 'jpg');
+    a.target = '_blank';
+    a.click();
+  });
   let currentPostId = null;
   let currentArtists = [];
   const settingsBtn = document.getElementById('settings-btn');
@@ -774,10 +900,6 @@
     muteLabel.textContent = bgVideo.muted ? 'Unmute' : 'Mute';
   }
   muteBtn.addEventListener('click', () => { bgVideo.muted = !bgVideo.muted; updateMuteUI(); });
-
-  function crossfade(showFn) {
-    setTimeout(showFn, 50);
-  }
 
   function showVideo(url) {
     bgVideo.pause();
@@ -874,15 +996,9 @@
   let commentCycle = null;
   let imageTimer = null;
 
-  function durationLabel(v) {
-    v = +v;
-    if (v >= 61) return 'Never';
-    return v + 's';
-  }
-
   function clearImageTimer() { clearTimeout(imageTimer); imageTimer = null; }
 
-  function autoSkipEnabled() { return (parseInt(localStorage.getItem(K.imgDuration)) || 7) < 61; }
+  function autoSkipEnabled() { return localStorage.getItem(K.autoSkip) !== 'false'; }
   function getImgDuration() {
     return (parseInt(localStorage.getItem(K.imgDuration)) || 7) * 1000;
   }
@@ -950,7 +1066,7 @@
   }
 
   async function fetchE621(callSource) {
-    document.getElementById('gross-btn').style.display = 'flex';
+    grossBtn.style.display = 'flex';
     const user = localStorage.getItem(K.user);
     const key  = localStorage.getItem(K.key);
     const pool = getActivePool();
@@ -961,8 +1077,6 @@
     const ratingFilter = checkedRatings.length === 1
       ? ' ' + checkedRatings[0]
       : (checkedRatings.length === 2 ? ' ~' + checkedRatings.join(' ~') : '');
-    const poolBadge = document.getElementById('pool-badge');
-    const poolDivider = document.getElementById('pool-divider');
     if (pool && pool.name) {
       poolBadge.textContent = pool.name; poolBadge.style.display = ''; poolDivider.style.display = '';
     } else { poolBadge.style.display = 'none'; poolDivider.style.display = 'none'; }
@@ -1032,6 +1146,9 @@
     sauceBtn.href = 'https://e621.net/posts/' + post.id;
     sauceBtn.style.display = 'flex';
     currentPostId = post.id;
+    currentFileUrl = post.file.url;
+    currentFileExt = post.file.ext;
+    downloadBtn.style.display = 'flex';
     hotBtn.style.display = 'flex';
     hotBtn.classList.remove('faved');
     // is_favorited is included in authenticated responses
@@ -1062,7 +1179,7 @@
       artistValEl.appendChild(span);
     });
     const artistName = artists.map(a => a.replace(/_/g, ' ')).join(', ');
-    document.getElementById('artist-divider').style.display = artistName ? '' : 'none';
+    artistDivider.style.display = artistName ? '' : 'none';
     const moreBtn = document.getElementById('artist-more-btn');
     if (artistName) {
       moreBtn.style.visibility = 'hidden';
@@ -1075,18 +1192,17 @@
       moreBtn.style.display = 'none';
     }
     currentArtists = artists;
-    document.getElementById('artist-strip').classList.remove('open');
+    artistStrip_.classList.remove('open');
     const score = (post.score && post.score.total !== undefined) ? post.score.total : null;
-    const scoreEl = document.getElementById('score-val');
-    scoreEl.textContent = score !== null ? score : '?';
-    scoreEl.className = score === null ? '' : score >= 200 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
-    const ratingEl = document.getElementById('rating-badge');
+    scoreVal.textContent = score !== null ? score : '?';
+    scoreVal.className = score === null ? '' : score >= 200 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
+    const ratingEl = ratingBadge;
     const r = post.rating;
     if (r === 's') { ratingEl.textContent = 'S'; ratingEl.className = 'safe'; }
     else if (r === 'q') { ratingEl.textContent = 'Q'; ratingEl.className = 'quest'; }
     else if (r === 'e') { ratingEl.textContent = 'E'; ratingEl.className = 'explicit'; }
     else { ratingEl.textContent = ''; ratingEl.className = ''; }
-    document.getElementById('score-badge').style.display = 'flex';
+    scoreBadge.style.display = 'flex';
     fetchCommentsForPost(post.id, user, key);
   }
 
@@ -1113,13 +1229,15 @@
     commentBox.style.display = 'none';
     sauceBtn.style.display = 'none';
     hotBtn.style.display = 'none';
-    document.getElementById('gross-btn').style.display = 'none';
+    grossBtn.style.display = 'none';
     document.getElementById('artist-more-btn').style.display = 'none';
-    document.getElementById('artist-strip').classList.remove('open');
+    artistStrip_.classList.remove('open');
     currentPostId = null;
-    document.getElementById('score-badge').style.display = 'none';
-    document.getElementById('pool-badge').style.display = 'none';
-    document.getElementById('pool-divider').style.display = 'none';
+    currentFileUrl = null;
+    downloadBtn.style.display = 'none';
+    scoreBadge.style.display = 'none';
+    poolBadge.style.display = 'none';
+    poolDivider.style.display = 'none';
     const d = localStorage.getItem(K.wpData), t = localStorage.getItem(K.wpType);
     if (d && t) { applyMedia(d, t); return; }
     tryLocalFile(0);
@@ -1147,13 +1265,6 @@
     else fallbackLocal();
   }
   init();
-
-  window.addEventListener('load', () => {
-    const source = localStorage.getItem(K.source) || 'local';
-    if (source === 'e621' && localStorage.getItem(K.user) && localStorage.getItem(K.key)) {
-      fetchE621('startup (window load)');
-    }
-  });
 
   document.getElementById('gross-btn').addEventListener('click', () => fetchE621());
 
@@ -1258,9 +1369,11 @@
     document.getElementById('cfg-comments').checked = localStorage.getItem(K.commentsVisible) !== 'false';
     const sv = localStorage.getItem(K.volume) || '100';
     volSlider.value = sv; volVal.textContent = sv + '%';
+    const autoSkipSaved = localStorage.getItem(K.autoSkip) !== 'false';
+    autoSkipCheckbox.checked = autoSkipSaved;
     const sd = parseInt(localStorage.getItem(K.imgDuration)) || 7;
-    document.getElementById('img-duration-slider').value = sd;
-    document.getElementById('img-duration-val').textContent = durationLabel(sd);
+    imgDurationInput.value = sd;
+    updateAutoSkipUI();
     renderPools();
     setActiveSource(localStorage.getItem(K.source) || 'local');
     settingsBox.style.position = '';
@@ -1294,7 +1407,8 @@
     localStorage.setItem(K.startMuted, document.getElementById('cfg-start-muted').checked ? 'true' : 'false');
     const seVal = document.getElementById('cfg-search-engine')?.value;
     if (seVal) localStorage.setItem(K.searchEngine, seVal);
-    localStorage.setItem(K.imgDuration, document.getElementById('img-duration-slider').value);
+    localStorage.setItem(K.autoSkip, autoSkipCheckbox.checked ? 'true' : 'false');
+    if (autoSkipCheckbox.checked) localStorage.setItem(K.imgDuration, parseInt(imgDurationInput.value) || 7);
     const checkedRatingSave = [...document.querySelectorAll('#rating-filter input:checked')].map(i => i.value);
     localStorage.setItem(K.ratings, JSON.stringify(checkedRatingSave));
     const tintEl = document.getElementById('tint-slider');
@@ -1511,25 +1625,21 @@
 
   applyCommentVisibility();
 
+  // auto-skip checkbox + duration input
+  const autoSkipCheckbox = document.getElementById('cfg-auto-skip');
+  const imgDurationField = document.getElementById('img-duration-field');
+  const imgDurationInput = document.getElementById('img-duration-input');
 
+  function updateAutoSkipUI() {
+    const enabled = autoSkipCheckbox.checked;
+    imgDurationField.style.display = enabled ? 'block' : 'none';
+  }
 
-
-  applyCommentVisibility();
-
-  // image duration slider live preview
-  const imgDurSlider = document.getElementById('img-duration-slider');
-  const imgDurVal = document.getElementById('img-duration-val');
-
-  // Use raw 0-63 range internally, friction applied via pointer capture
-
-
-  const savedDur = parseInt(localStorage.getItem(K.imgDuration)) || 7;
-  imgDurSlider.value = savedDur;
-  imgDurVal.textContent = durationLabel(savedDur);
-
-  imgDurSlider.addEventListener('input', function() {
-    imgDurVal.textContent = durationLabel(+this.value);
-  });
+  autoSkipCheckbox.addEventListener('change', updateAutoSkipUI);
+  // init state from localStorage
+  autoSkipCheckbox.checked = localStorage.getItem(K.autoSkip) !== 'false';
+  imgDurationInput.value = parseInt(localStorage.getItem(K.imgDuration)) || 7;
+  updateAutoSkipUI();
 
   // post history for back button — stores last 10 posts
   const postHistory = [];
@@ -1579,12 +1689,12 @@
     artistStrip.style.top = '';
     artistStrip.style.right = '';
     artistStrip.style.margin = '';
+    artistStrip.style.transform = '';
     const user = localStorage.getItem(K.user), key = localStorage.getItem(K.key);
     if (!user || !key) return;
     artistStripScroll.innerHTML = '<div id="artist-strip-empty">Loading…</div>';
     artistStrip.classList.add('open');
     const auth = 'Basic ' + btoa(user + ':' + key);
-    const tagQuery = currentArtists.map(a => a).join(' ~') ;
     try {
       const res = await fetch(`${API}/posts.json?${new URLSearchParams({ limit:6, tags: currentArtists[0] + ' order:random -flash' })}`, {
         headers: { 'User-Agent':'VivaldiStartpage/1.0', 'Authorization': auth }
@@ -1680,8 +1790,6 @@
   const rArtistBtns = document.getElementById('r-artist-btns');
   const rCopyBtn    = document.getElementById('ranker-copy-btn');
   const FAKE_ARTISTS = new Set(['conditional_dnp','sound_warning','animated','webm','flash','no_sound','video','corrupt','commentary_request']);
-
-  // fade backdrop when mouse enters the window, restore when it leaves
 
   function openRanker() {
     rankerPanel.style.position = '';
@@ -1845,7 +1953,58 @@
     welcomeScreen.addEventListener('click', e => { if (e.target === welcomeScreen) dismissWelcome(); });
   }
 
-  window.addEventListener('load', () => { if (!isMobile) searchInput.focus(); });
+  window.addEventListener('load', () => {
+    if (!isMobile) searchInput.focus();
+  });
+
+  // mobile ... menu drawer
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const mobileDrawer  = document.getElementById('mobile-drawer');
+  const mobScore      = document.getElementById('mob-score');
+  const mobHotBtn     = document.getElementById('mob-hot-btn');
+
+  function closeMobileDrawer() { mobileDrawer.classList.remove('open'); }
+
+  mobileMenuBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (mobileDrawer.classList.contains('open')) { closeMobileDrawer(); return; }
+    // sync hot button state
+    mobHotBtn.classList.toggle('faved', hotBtn.classList.contains('faved'));
+    // sync score
+    if (currentPostId) {
+      const sv = scoreVal.textContent;
+      const artist = document.getElementById('artist-val').textContent;
+      mobScore.textContent = (artist ? artist + '  ' : '') + sv;
+    } else { mobScore.textContent = ''; }
+    syncMobMute();
+    mobileDrawer.classList.add('open');
+  });
+  document.addEventListener('click', e => {
+    if (!mobileDrawer.contains(e.target) && e.target !== mobileMenuBtn) closeMobileDrawer();
+  });
+
+  const mobMuteBtn = document.getElementById('mob-mute-btn');
+
+  function syncMobMute() {
+    const isMuted = bgVideo.muted;
+    mobMuteBtn.querySelector('svg').innerHTML = isMuted
+      ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>'
+      : '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+    mobMuteBtn.querySelector('svg').nextSibling.textContent = isMuted ? ' Unmute' : ' Mute';
+  }
+  mobMuteBtn.addEventListener('click', () => {
+    bgVideo.muted = !bgVideo.muted;
+    updateMuteUI();
+    syncMobMute();
+  });
+
+  document.getElementById('mob-gross-btn').addEventListener('click', () => { closeMobileDrawer(); fetchE621(); });
+  document.getElementById('mob-hot-btn').addEventListener('click', () => { closeMobileDrawer(); hotBtn.click(); });
+  document.getElementById('mob-download-btn').addEventListener('click', () => { closeMobileDrawer(); downloadBtn.click(); });
+  document.getElementById('mob-back-btn').addEventListener('click', () => { closeMobileDrawer(); backBtn.click(); });
+  document.getElementById('mob-artist-btn').addEventListener('click', () => { closeMobileDrawer(); moreBtnEl.click(); });
+  document.getElementById('mob-ranker-btn').addEventListener('click', () => { closeMobileDrawer(); document.getElementById('ranker-btn').click(); });
+  document.getElementById('mob-settings-btn').addEventListener('click', () => { closeMobileDrawer(); settingsBtn.click(); });
 </script>
 </body>
 </html>
