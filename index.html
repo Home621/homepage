@@ -167,6 +167,33 @@
   #back-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
   #back-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
   #settings-btn { right:22px; }
+  @keyframes btn-shimmer {
+    0%   { background-position:-200% center; }
+    100% { background-position: 200% center; }
+  }
+  .shimmer-fx {
+    background:linear-gradient(90deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.08) 30%,rgba(255,255,255,0.38) 50%,rgba(255,255,255,0.08) 70%,rgba(255,255,255,0.08) 100%) !important;
+    background-size:200% auto !important;
+    animation:btn-shimmer 0.65s ease forwards !important;
+    border-color:rgba(255,255,255,0.4) !important;
+    color:rgba(255,255,255,0.95) !important;
+  }
+  /* camera fields */
+  #camera-fields { display:none; flex-direction:column; gap:16px; }
+  #camera-fields.visible { display:flex; }
+  #camera-you-btn {
+    width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+    border-radius:8px; color:rgba(255,255,255,0.55); font-family:'DM Sans',sans-serif;
+    font-size:13px; padding:10px 14px; cursor:pointer; text-align:left; transition:background 0.15s;
+  }
+  #camera-you-btn:hover { background:rgba(255,255,255,0.13); color:rgba(255,255,255,0.8); }
+  #camera-you-btn:disabled { cursor:default; opacity:0.4; }
+  #camera-select {
+    display:none; width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+    border-radius:8px; color:rgba(255,255,255,0.7); font-family:'DM Sans',sans-serif;
+    font-size:13px; padding:8px 10px; outline:none; cursor:pointer; margin-top:8px;
+  }
+
   #file-input { display:none; }
 
   #sauce-btn { position:fixed; top:22px; right:22px; z-index:10; display:none; align-items:center; gap:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; letter-spacing:0.06em; padding:7px 13px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; text-decoration:none; }
@@ -725,6 +752,7 @@
     <div id="source-toggle">
       <button class="src-opt active" data-src="e621">e621</button>
       <button class="src-opt" data-src="local">Local file</button>
+      <button class="src-opt" data-src="camera" id="camera-src-opt" style="display:none;">Camera</button>
     </div>
 
     <div class="field">
@@ -777,6 +805,14 @@
         <label>Or browse from disk</label>
         <button id="local-browse-btn" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 14px;cursor:pointer;text-align:left;transition:background 0.15s;">Browse files...</button>
         <input id="local-browse-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4" style="display:none;"/>
+      </div>
+    </div>
+
+    <div id="camera-fields">
+      <div class="field">
+        <button id="camera-you-btn">You...?</button>
+        <select id="camera-select"><option value="">Select a camera…</option></select>
+        <span class="hint" id="camera-hint" style="display:none;">Live camera feed will replace your wallpaper.</span>
       </div>
     </div>
 
@@ -842,6 +878,7 @@
   const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration', tint:'viv_tint', ratings:'viv_ratings', uiHidden:'viv_ui_hidden', displayMode:'viv_display_mode' };
   let favsActive = localStorage.getItem('viv_favs_active') === 'true';
   let fitScreenActive = localStorage.getItem('viv_fit_screen') === 'true';
+  let superHotBtn = null;
 
   const bgCur     = document.getElementById('bg');
   const bgPrev    = document.getElementById('bg-prev');
@@ -1370,7 +1407,7 @@
   });
 
   // Super Hot — add current post to one of your e621 sets
-  const superHotBtn = document.getElementById('superhot-btn');
+  superHotBtn = document.getElementById('superhot-btn');
   const setPicker   = document.getElementById('set-picker');
   const setPickerList = document.getElementById('set-picker-list');
   document.getElementById('set-picker-close').addEventListener('click', () => setPicker.classList.remove('open'));
@@ -1505,15 +1542,15 @@
     document.querySelectorAll('.src-opt').forEach(b => b.classList.toggle('active', b.dataset.src === src));
     document.getElementById('e621-fields').classList.toggle('visible', src === 'e621');
     document.getElementById('local-fields').classList.toggle('visible', src === 'local');
+    document.getElementById('camera-fields').classList.toggle('visible', src === 'camera');
   }
 
   function closeSettings() {
-    settingsBox.style.display = 'none'; // hide box instantly
-    panel.classList.add('closing'); // fade backdrop
-    setTimeout(() => {
-      panel.classList.remove('open', 'closing');
-      settingsBox.style.display = '';
-    }, 400);
+    settingsBox.style.display = 'none';
+    panel.classList.add('closing');
+    setTimeout(() => { panel.classList.remove('open', 'closing'); settingsBox.style.display = ''; }, 400);
+    settingsBtn.classList.add('shimmer-fx');
+    setTimeout(() => settingsBtn.classList.remove('shimmer-fx'), 750);
   }
 
   function saveSettings() {
@@ -2066,6 +2103,104 @@
     };
     document.getElementById('welcome-dismiss').addEventListener('click', dismissWelcome);
     welcomeScreen.addEventListener('click', e => { if (e.target === welcomeScreen) dismissWelcome(); });
+  }
+
+
+  // ── eye-btn secret: 5 clicks in 2s unlocks Camera source ──────────────────
+  let _eyeN = 0, _eyeT = null;
+  document.getElementById('eye-btn').addEventListener('click', () => {
+    _eyeN++;
+    clearTimeout(_eyeT);
+    _eyeT = setTimeout(() => { _eyeN = 0; }, 2000);
+    if (_eyeN >= 5) {
+      _eyeN = 0;
+      const camOpt = document.getElementById('camera-src-opt');
+      const wasVisible = camOpt.style.display !== 'none';
+      camOpt.style.display = wasVisible ? 'none' : '';
+      localStorage.setItem('viv_cam_unlocked', wasVisible ? '' : '1');
+      if (wasVisible && localStorage.getItem(K.source) === 'camera') {
+        localStorage.setItem(K.source, 'e621'); setActiveSource('e621'); _stopCam();
+      }
+      settingsBtn.classList.add('shimmer-fx');
+      setTimeout(() => settingsBtn.classList.remove('shimmer-fx'), 750);
+    }
+  }, true);
+  if (localStorage.getItem('viv_cam_unlocked') === '1') {
+    document.getElementById('camera-src-opt').style.display = '';
+  }
+
+  // ── camera stream ──────────────────────────────────────────────────────────
+  let _camStream = null, _camEl = null;
+  function _stopCam() {
+    if (_camStream) { _camStream.getTracks().forEach(t => t.stop()); _camStream = null; }
+    if (_camEl)     { _camEl.srcObject = null; _camEl.remove(); _camEl = null; }
+    bgWrap.style.display = '';
+  }
+  async function _startCam(deviceId) {
+    _stopCam();
+    try {
+      _camStream = await navigator.mediaDevices.getUserMedia(
+        { video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: false }
+      );
+      _camEl = Object.assign(document.createElement('video'),
+        { autoplay: true, muted: true, playsInline: true });
+      _camEl.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;';
+      document.body.appendChild(_camEl);
+      _camEl.srcObject = _camStream;
+      bgWrap.style.display = 'none';
+      if (deviceId) localStorage.setItem('viv_cam_dev', deviceId);
+    } catch(e) { showError('Camera access denied or unavailable.'); }
+  }
+
+  // ── "You...?" button ───────────────────────────────────────────────────────
+  const _youBtn  = document.getElementById('camera-you-btn');
+  const _camSel  = document.getElementById('camera-select');
+  const _camHint = document.getElementById('camera-hint');
+
+  async function _populateCams() {
+    try {
+      const tmp = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      tmp.getTracks().forEach(t => t.stop());
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      _camSel.innerHTML = '<option value="">Select a camera…</option>';
+      devs.filter(d => d.kind === 'videoinput').forEach((d, i) => {
+        const o = document.createElement('option');
+        o.value = d.deviceId; o.textContent = d.label || 'Camera ' + (i + 1);
+        _camSel.appendChild(o);
+      });
+      const saved = localStorage.getItem('viv_cam_dev');
+      if (saved) _camSel.value = saved;
+      // first-time shimmer
+      if (!localStorage.getItem('viv_cam_granted')) {
+        localStorage.setItem('viv_cam_granted', '1');
+        _youBtn.classList.add('shimmer-fx');
+        setTimeout(() => _youBtn.classList.remove('shimmer-fx'), 750);
+      }
+      _youBtn.style.display = 'none';
+      _camSel.style.display = '';
+      _camHint.style.display = '';
+    } catch(e) { _youBtn.textContent = 'Access denied :('; _youBtn.disabled = true; }
+  }
+
+  _youBtn.addEventListener('click', _populateCams);
+  _camSel.addEventListener('change', function() { if (this.value) _startCam(this.value); });
+
+  // skip prompt if already granted
+  document.getElementById('camera-src-opt').addEventListener('click', async () => {
+    try {
+      const d = await navigator.mediaDevices.enumerateDevices();
+      if (d.some(x => x.kind === 'videoinput' && x.label)) _populateCams();
+    } catch(e) {}
+  });
+
+  // stop camera when closing settings away from camera source
+  document.getElementById('settings-close').addEventListener('click', () => {
+    if (document.querySelector('.src-opt.active')?.dataset.src !== 'camera') _stopCam();
+  });
+
+  // restore on startup
+  if (localStorage.getItem(K.source) === 'camera' && localStorage.getItem('viv_cam_unlocked') === '1') {
+    _startCam(localStorage.getItem('viv_cam_dev') || null);
   }
 
   window.addEventListener('load', () => {
