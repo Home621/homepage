@@ -183,26 +183,6 @@
   #hot-btn.faved svg { fill:rgba(255,210,80,0.9); stroke:rgba(255,210,80,0.9); }
   #hot-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 
-  #superhot-btn { position:fixed; top:146px; right:22px; z-index:10; display:none; align-items:center; gap:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,160,40,0.8); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; letter-spacing:0.06em; padding:7px 13px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
-  #superhot-btn:hover { background:rgba(255,160,40,0.12); color:rgba(255,180,60,1); border-color:rgba(255,160,40,0.4); }
-  #superhot-btn.added { color:rgba(255,210,80,0.95); border-color:rgba(255,210,80,0.5); background:rgba(255,210,80,0.1); }
-  #superhot-btn svg { width:14px; height:14px; stroke:currentColor; fill:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
-
-  #set-picker { display:none; position:fixed; top:190px; right:22px; z-index:15; width:220px; max-height:300px; background:rgba(20,20,20,0.85); border:1px solid rgba(255,255,255,0.12); border-radius:12px; backdrop-filter:blur(24px) saturate(0.6); -webkit-backdrop-filter:blur(24px) saturate(0.6); box-shadow:0 8px 32px rgba(0,0,0,0.4); flex-direction:column; overflow:hidden; }
-  #set-picker.open { display:flex; }
-  #set-picker-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0; }
-  #set-picker-header span { font-size:12px; color:rgba(255,255,255,0.5); letter-spacing:0.04em; font-family:'DM Sans',sans-serif; }
-  #set-picker-close { background:none; border:none; color:rgba(255,255,255,0.3); font-size:16px; cursor:pointer; padding:0 2px; transition:color 0.15s; }
-  #set-picker-close:hover { color:rgba(255,255,255,0.8); }
-  #set-picker-list { overflow-y:auto; padding:6px; scrollbar-width:none; }
-  #set-picker-list::-webkit-scrollbar { display:none; }
-  .set-picker-item { width:100%; text-align:left; background:none; border:none; border-radius:7px; padding:8px 10px; color:rgba(255,255,255,0.6); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; transition:background 0.15s, color 0.15s; }
-  .set-picker-item:hover { background:rgba(255,255,255,0.08); color:#fff; }
-  .set-picker-item.in-set { color:rgba(255,210,80,0.9); }
-  .set-picker-item.in-set:hover { background:rgba(255,80,80,0.1); color:rgba(255,120,120,0.9); }
-  .set-picker-item.adding { color:rgba(255,200,60,0.8); }
-  .set-picker-empty { padding:16px; text-align:center; font-size:12px; color:rgba(255,255,255,0.3); font-family:'DM Sans',sans-serif; }
-
   #comment-box {
     position:fixed; top:22px; left:22px; z-index:10;
     max-width:300px; min-width:160px;
@@ -290,7 +270,7 @@
     #artist-strip { top:50% !important; left:50% !important; right:auto !important; transform:translate(-50%,-50%) !important; width:90vw; max-width:340px; }
 
     /* hide all non-essential buttons on mobile */
-    #sauce-btn, #gross-btn, #hot-btn, #superhot-btn, #score-badge, #artist-more-btn,
+    #sauce-btn, #gross-btn, #hot-btn, #score-badge, #artist-more-btn,
     #back-btn, #download-btn, #settings-btn, #ranker-btn, #mute-btn { display: none !important; }
 
     /* keep eye-btn and mute-btn visible */
@@ -514,19 +494,6 @@
   <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
   Hot
 </button>
-
-<button id="superhot-btn">
-  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-  Super Hot
-</button>
-
-<div id="set-picker">
-  <div id="set-picker-header">
-    <span>Add to set</span>
-    <button id="set-picker-close">×</button>
-  </div>
-  <div id="set-picker-list"></div>
-</div>
 
 
 <button id="artist-more-btn">more pls</button>
@@ -1183,8 +1150,6 @@
     currentFileExt = post.file.ext;
     downloadBtn.style.display = 'flex';
     hotBtn.style.display = 'flex';
-    superHotBtn.style.display = 'flex';
-    superHotBtn.classList.remove('added');
     hotBtn.classList.remove('faved');
     // is_favorited is included in authenticated responses
     if (post.is_favorited === true) {
@@ -1264,8 +1229,6 @@
     commentBox.style.display = 'none';
     sauceBtn.style.display = 'none';
     hotBtn.style.display = 'none';
-    superHotBtn.style.display = 'none';
-    setPicker.classList.remove('open');
     grossBtn.style.display = 'none';
     document.getElementById('artist-more-btn').style.display = 'none';
     artistStrip_.classList.remove('open');
@@ -1366,84 +1329,6 @@
       if (m.includes('401')) showError('Wrong credentials — can\'t favorite.');
       else if (m.includes('429')) showError('Rate limited — try again in a moment.');
       else showError('Failed to favorite — check your connection.');
-    }
-  });
-
-  // Super Hot — add current post to one of your e621 sets
-  const superHotBtn = document.getElementById('superhot-btn');
-  const setPicker   = document.getElementById('set-picker');
-  const setPickerList = document.getElementById('set-picker-list');
-  document.getElementById('set-picker-close').addEventListener('click', () => setPicker.classList.remove('open'));
-
-  superHotBtn.addEventListener('click', async () => {
-    if (!currentPostId) return;
-    if (setPicker.classList.contains('open')) { setPicker.classList.remove('open'); return; }
-    const user = localStorage.getItem(K.user);
-    const key  = localStorage.getItem(K.key);
-    if (!user || !key) return;
-    const auth = 'Basic ' + btoa(user + ':' + key);
-    setPickerList.innerHTML = '<div class="set-picker-empty">Loading sets…</div>';
-    setPicker.classList.add('open');
-    try {
-      // fetch sets and membership in parallel
-      const [setsRes, memberRes] = await Promise.all([
-        fetch(`${API}/post_sets/for_select.json`, { headers: { 'User-Agent': 'VivaldiStartpage/1.0', 'Authorization': auth } }),
-        fetch(`${API}/post_sets.json?${new URLSearchParams({ 'search[post_id]': currentPostId })}`, { headers: { 'User-Agent': 'VivaldiStartpage/1.0', 'Authorization': auth } })
-      ]);
-      if (!setsRes.ok) { setPickerList.innerHTML = '<div class="set-picker-empty">Failed to load sets.</div>'; return; }
-      const data = await setsRes.json();
-      const sets = [...(data.Owned || []), ...(data.Maintained || [])];
-      if (!sets.length) { setPickerList.innerHTML = '<div class="set-picker-empty">No sets found.</div>'; return; }
-
-      // build set of IDs that already contain this post
-      let memberIds = new Set();
-      if (memberRes.ok) {
-        const memberData = await memberRes.json();
-        (memberData || []).forEach(s => memberIds.add(s.id));
-      }
-
-      setPickerList.innerHTML = '';
-      sets.forEach(([name, id]) => {
-        const inSet = memberIds.has(id);
-        const btn = document.createElement('button');
-        btn.className = 'set-picker-item' + (inSet ? ' in-set' : '');
-        btn.textContent = (inSet ? '✓ ' : '') + name;
-        btn.addEventListener('click', async () => {
-          const removing = btn.classList.contains('in-set');
-          btn.textContent = removing ? 'Removing…' : 'Adding…';
-          btn.classList.add('adding');
-          const endpoint = removing ? 'remove_posts' : 'add_posts';
-          try {
-            const r = await fetch(`${API}/post_sets/${id}/${endpoint}.json`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'VivaldiStartpage/1.0', 'Authorization': auth },
-              body: new URLSearchParams({ 'post_ids[]': currentPostId })
-            });
-            if (r.ok || r.status === 201) {
-              if (removing) {
-                btn.textContent = name;
-                btn.classList.remove('in-set', 'adding');
-                memberIds.delete(id);
-              } else {
-                btn.textContent = '✓ ' + name;
-                btn.classList.add('in-set');
-                btn.classList.remove('adding');
-                memberIds.add(id);
-                superHotBtn.classList.add('added');
-              }
-              // update superhot button state
-              superHotBtn.classList.toggle('added', memberIds.size > 0);
-              setTimeout(() => setPicker.classList.remove('open'), 600);
-            } else {
-              btn.textContent = (removing ? '' : '') + name;
-              btn.classList.remove('adding');
-            }
-          } catch(e) { btn.textContent = name; btn.classList.remove('adding'); }
-        });
-        setPickerList.appendChild(btn);
-      });
-    } catch(e) {
-      setPickerList.innerHTML = '<div class="set-picker-empty">Failed to load sets.</div>';
     }
   });
 
