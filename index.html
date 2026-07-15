@@ -2302,7 +2302,6 @@ No asterisks, no explanation, just the line.`;
   }
 
 
-  // ── eye-btn: 5 clicks in 2s unlocks Camera source ────────────────────────
   // ── unlock animation ──────────────────────────────────────────────────────
   function _sineInOut(t) { return -(Math.cos(Math.PI * t) - 1) / 2; }
 
@@ -2311,17 +2310,15 @@ No asterisks, no explanation, just the line.`;
     const pill     = document.getElementById('unlock-pill');
     const icon     = document.getElementById('unlock-pill-icon');
     const lbl      = document.getElementById('unlock-pill-label');
-    const target   = settingsBtn; // the wallpaper settings button
+    const target   = settingsBtn;
 
     icon.innerHTML = iconPath;
     lbl.textContent = label;
 
-    // Show backdrop
     backdrop.style.background = 'rgba(0,0,0,0.55)';
     backdrop.style.backdropFilter = 'blur(8px)';
     backdrop.style.webkitBackdropFilter = 'blur(8px)';
 
-    // Position pill at viewport center
     pill.style.display = 'flex';
     pill.style.opacity = '0';
     pill.style.transform = 'scale(0.5)';
@@ -2372,10 +2369,8 @@ No asterisks, no explanation, just the line.`;
         if (p < 1) requestAnimationFrame(glide);
         else {
           pill.style.display = 'none';
-          // shimmer settings button
           settingsBtn.classList.add('shimmer-fx');
           setTimeout(() => settingsBtn.classList.remove('shimmer-fx'), 750);
-          // fade out backdrop
           backdrop.style.background = 'rgba(0,0,0,0)';
           backdrop.style.backdropFilter = 'blur(0px)';
           backdrop.style.webkitBackdropFilter = 'blur(0px)';
@@ -2385,44 +2380,6 @@ No asterisks, no explanation, just the line.`;
     }));
   }
 
-  let _eyeN = 0, _eyeT = null;
-  document.getElementById('eye-btn').addEventListener('click', () => {
-    _eyeN++;
-    clearTimeout(_eyeT);
-    _eyeT = setTimeout(() => { _eyeN = 0; }, 2000);
-    if (_eyeN >= 5) {
-      _eyeN = 0;
-      const camOpt = document.getElementById('camera-src-opt');
-      const wasVisible = camOpt.style.display !== 'none';
-      camOpt.style.display = wasVisible ? 'none' : '';
-      localStorage.setItem('viv_cam_unlocked', wasVisible ? '' : '1');
-      if (wasVisible && localStorage.getItem(K.source) === 'camera') {
-        localStorage.setItem(K.source, 'e621');
-        setActiveSource('e621');
-        _stopCam();
-      }
-      if (!wasVisible) _playUnlockAnim('<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>', 'Camera wallpaper');
-    }
-  }, true);
-
-  // mute-btn secret: 5 clicks in 2s toggles insult feature
-  let _muteN = 0, _muteT = null;
-  document.getElementById('mute-btn').addEventListener('click', () => {
-    _muteN++;
-    clearTimeout(_muteT);
-    _muteT = setTimeout(() => { _muteN = 0; }, 2000);
-    if (_muteN >= 5) {
-      _muteN = 0;
-      const wasOn = localStorage.getItem('viv_insults_on') === '1';
-      const firstTime = localStorage.getItem('viv_insults_on') === null;
-      const newVal = wasOn ? '0' : '1';
-      localStorage.setItem('viv_insults_on', newVal);
-      const insultsRow = document.getElementById('cfg-insults-row');
-      insultsRow.style.display = '';
-      document.getElementById('cfg-insults').checked = newVal === '1';
-      if (firstTime) _playUnlockAnim('<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>', 'Enable insults');
-    }
-  }, true);
   if (localStorage.getItem('viv_cam_unlocked') === '1') {
     document.getElementById('camera-src-opt').style.display = '';
   }
