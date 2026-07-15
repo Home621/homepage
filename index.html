@@ -163,25 +163,39 @@
   #download-btn { position:fixed; bottom:106px; left:22px; z-index:10; display:none; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
   #download-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
   #download-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-  #back-btn { position:fixed; bottom:150px; left:22px; z-index:10; display:none; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
+  #back-btn { position:fixed; top:62px; right:66px; z-index:10; display:none; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
   #back-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
   #back-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
   #settings-btn { right:22px; }
+  @keyframes _shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+  .shimmer-fx {
+    background:linear-gradient(90deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.07) 30%,rgba(255,255,255,0.38) 50%,rgba(255,255,255,0.07) 70%,rgba(255,255,255,0.07) 100%) !important;
+    background-size:200% auto !important;
+    animation:_shimmer 0.65s ease forwards !important;
+    border-color:rgba(255,255,255,0.4) !important;
+    color:rgba(255,255,255,0.95) !important;
+  }
+  #camera-fields { display:none; flex-direction:column; gap:16px; }
+  #camera-fields.visible { display:flex; }
+  #camera-you-btn { width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:rgba(255,255,255,0.55); font-family:'DM Sans',sans-serif; font-size:13px; padding:10px 14px; cursor:pointer; text-align:left; transition:background 0.15s; }
+  #camera-you-btn:hover { background:rgba(255,255,255,0.13); }
+  #camera-you-btn:disabled { opacity:0.4; cursor:default; }
+  #camera-select { display:none; width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:rgba(255,255,255,0.7); font-family:'DM Sans',sans-serif; font-size:13px; padding:8px 10px; outline:none; cursor:pointer; margin-top:8px; }
   #file-input { display:none; }
 
-  #sauce-btn { position:fixed; top:22px; right:22px; z-index:10; display:none; align-items:center; gap:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; letter-spacing:0.06em; padding:7px 13px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; text-decoration:none; }
+  #sauce-btn { position:fixed; top:22px; right:22px; z-index:10; display:none; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; text-decoration:none; }
   #sauce-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
-  #sauce-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+  #sauce-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 
-  #gross-btn { position:fixed; top:62px; right:22px; z-index:10; display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; letter-spacing:0.06em; padding:7px 13px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
+  #gross-btn { position:fixed; top:62px; right:22px; z-index:10; display:none; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
   #gross-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
-  #gross-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+  #gross-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 
-  #hot-btn { position:fixed; top:102px; right:22px; z-index:10; display:none; align-items:center; gap:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; letter-spacing:0.06em; padding:7px 13px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
+  #hot-btn { position:fixed; top:22px; right:66px; z-index:10; display:none; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
   #hot-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
   #hot-btn.faved { color:rgba(255,210,80,0.9); border-color:rgba(255,210,80,0.4); background:rgba(255,210,80,0.08); }
   #hot-btn.faved svg { fill:rgba(255,210,80,0.9); stroke:rgba(255,210,80,0.9); }
-  #hot-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+  #hot-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 
   #comment-box {
     position:fixed; top:22px; left:22px; z-index:10;
@@ -258,7 +272,7 @@
   .dm-opt { flex:1; padding:9px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:rgba(255,255,255,0.4); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; text-align:center; transition:all 0.15s; }
   .dm-opt.active { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.35); color:#fff; }
   .src-opt.active { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.35); color:#fff; }
-  #e621-fields, #local-fields { display:none; }
+  #e621-fields, #local-fields, #camera-fields { display:none; }
   #e621-fields.visible, #local-fields.visible { display:flex; flex-direction:column; gap:16px; }
 
   @media (max-width: 768px) {
@@ -480,19 +494,16 @@
   <div id="comment-text"></div>
 </div>
 
-<a id="sauce-btn" href="#" target="_blank">
+<a id="sauce-btn" href="#" target="_blank" title="Source">
   <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-  Sauce
 </a>
 
-<button id="gross-btn">
-  <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
-  Gross
+<button id="gross-btn" title="Next post">
+  <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
 </button>
 
-<button id="hot-btn">
+<button id="hot-btn" title="Favorite">
   <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-  Hot
 </button>
 
 
@@ -692,6 +703,7 @@
     <div id="source-toggle">
       <button class="src-opt active" data-src="e621">e621</button>
       <button class="src-opt" data-src="local">Local file</button>
+      <button class="src-opt" data-src="camera" id="camera-src-opt" style="display:none;">Camera</button>
     </div>
 
     <div class="field">
@@ -744,6 +756,14 @@
         <label>Or browse from disk</label>
         <button id="local-browse-btn" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 14px;cursor:pointer;text-align:left;transition:background 0.15s;">Browse files...</button>
         <input id="local-browse-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4" style="display:none;"/>
+      </div>
+    </div>
+
+    <div id="camera-fields">
+      <div class="field">
+        <button id="camera-you-btn">You...?</button>
+        <select id="camera-select"><option value="">Select a camera…</option></select>
+        <span class="hint" id="camera-hint" style="display:none;">Live camera feed replaces your wallpaper.</span>
       </div>
     </div>
 
@@ -874,13 +894,26 @@
   let currentFileUrl = null;
   let currentFileExt = null;
 
-  downloadBtn.addEventListener('click', () => {
+  downloadBtn.addEventListener('click', async () => {
     if (!currentFileUrl) return;
-    const a = document.createElement('a');
-    a.href = currentFileUrl;
-    a.download = 'e621_' + (currentPostId || 'post') + '.' + (currentFileExt || 'jpg');
-    a.target = '_blank';
-    a.click();
+    const filename = 'e621_' + (currentPostId || 'post') + '.' + (currentFileExt || 'jpg');
+    try {
+      const res = await fetch(currentFileUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    } catch(e) {
+      // fallback: open in new tab if fetch fails (e.g. CORS)
+      const a = document.createElement('a');
+      a.href = currentFileUrl;
+      a.download = filename;
+      a.target = '_blank';
+      a.click();
+    }
   });
   let currentPostId = null;
   let currentArtists = [];
@@ -1262,6 +1295,7 @@
   function init() {
     const source = localStorage.getItem(K.source) || 'local';
     if (source === 'e621' && localStorage.getItem(K.user) && localStorage.getItem(K.key)) fetchE621('startup');
+    else if (source === 'camera') { /* camera handled after DOM ready below */ }
     else fallbackLocal();
   }
   init();
@@ -1390,15 +1424,15 @@
     document.querySelectorAll('.src-opt').forEach(b => b.classList.toggle('active', b.dataset.src === src));
     document.getElementById('e621-fields').classList.toggle('visible', src === 'e621');
     document.getElementById('local-fields').classList.toggle('visible', src === 'local');
+    document.getElementById('camera-fields').classList.toggle('visible', src === 'camera');
   }
 
   function closeSettings() {
-    settingsBox.style.display = 'none'; // hide box instantly
-    panel.classList.add('closing'); // fade backdrop
-    setTimeout(() => {
-      panel.classList.remove('open', 'closing');
-      settingsBox.style.display = '';
-    }, 400);
+    settingsBox.style.display = 'none';
+    panel.classList.add('closing');
+    setTimeout(() => { panel.classList.remove('open', 'closing'); settingsBox.style.display = ''; }, 400);
+    settingsBtn.classList.add('shimmer-fx');
+    setTimeout(() => settingsBtn.classList.remove('shimmer-fx'), 750);
   }
 
   function saveSettings() {
@@ -1432,9 +1466,22 @@
       if (user) localStorage.setItem(K.user, user);
       if (key)  localStorage.setItem(K.key, key);
       if (tags) localStorage.setItem(K.tags, tags);
+      _stopCam();
+      closeSettings();
+      fetchE621();
+      return;
+    } else if (src === 'camera') {
+      const selVal = document.getElementById('camera-select').value;
+      if (selVal) _startCam(selVal);
+      else { closeSettings(); return; }
     } else {
+      // local
+      _stopCam();
       sauceBtn.style.display = 'none';
       clearInterval(commentCycle); commentBox.style.display = 'none';
+      const d = localStorage.getItem(K.wpData), t = localStorage.getItem(K.wpType);
+      if (d && t) { closeSettings(); applyMedia(d, t); return; }
+      else tryLocalFile(0);
     }
     closeSettings();
   }
@@ -1951,6 +1998,93 @@
     };
     document.getElementById('welcome-dismiss').addEventListener('click', dismissWelcome);
     welcomeScreen.addEventListener('click', e => { if (e.target === welcomeScreen) dismissWelcome(); });
+  }
+
+
+  // ── eye-btn: 5 clicks in 2s unlocks Camera source ────────────────────────
+  let _eyeN = 0, _eyeT = null;
+  document.getElementById('eye-btn').addEventListener('click', () => {
+    _eyeN++;
+    clearTimeout(_eyeT);
+    _eyeT = setTimeout(() => { _eyeN = 0; }, 2000);
+    if (_eyeN >= 5) {
+      _eyeN = 0;
+      const camOpt = document.getElementById('camera-src-opt');
+      const wasVisible = camOpt.style.display !== 'none';
+      camOpt.style.display = wasVisible ? 'none' : '';
+      localStorage.setItem('viv_cam_unlocked', wasVisible ? '' : '1');
+      if (wasVisible && localStorage.getItem(K.source) === 'camera') {
+        localStorage.setItem(K.source, 'e621');
+        setActiveSource('e621');
+        _stopCam();
+      }
+      settingsBtn.classList.add('shimmer-fx');
+      setTimeout(() => settingsBtn.classList.remove('shimmer-fx'), 750);
+    }
+  }, true);
+  if (localStorage.getItem('viv_cam_unlocked') === '1') {
+    document.getElementById('camera-src-opt').style.display = '';
+  }
+
+  // ── camera stream ─────────────────────────────────────────────────────────
+  let _camStream = null, _camEl = null;
+  function _stopCam() {
+    if (_camStream) { _camStream.getTracks().forEach(t => t.stop()); _camStream = null; }
+    if (_camEl) { _camEl.srcObject = null; _camEl.remove(); _camEl = null; }
+    bgWrap.style.display = '';
+  }
+  async function _startCam(deviceId) {
+    _stopCam();
+    try {
+      _camStream = await navigator.mediaDevices.getUserMedia(
+        { video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: false }
+      );
+      _camEl = document.createElement('video');
+      _camEl.autoplay = true; _camEl.muted = true; _camEl.playsInline = true;
+      _camEl.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;';
+      document.body.appendChild(_camEl);
+      _camEl.srcObject = _camStream;
+      bgWrap.style.display = 'none';
+      if (deviceId) localStorage.setItem('viv_cam_dev', deviceId);
+    } catch(e) { showError('Camera access denied or unavailable.'); }
+  }
+
+  // ── "You...?" button ──────────────────────────────────────────────────────
+  const _youBtn  = document.getElementById('camera-you-btn');
+  const _camSel  = document.getElementById('camera-select');
+  const _camHint = document.getElementById('camera-hint');
+  async function _populateCams() {
+    try {
+      const tmp = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      tmp.getTracks().forEach(t => t.stop());
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      const cams = devs.filter(d => d.kind === 'videoinput');
+      if (!localStorage.getItem('viv_cam_granted')) localStorage.setItem('viv_cam_granted', '1');
+      const saved = localStorage.getItem('viv_cam_dev') || (cams[0]?.deviceId ?? '');
+      if (saved) localStorage.setItem('viv_cam_dev', saved);
+      localStorage.setItem(K.source, 'camera');
+      window.location.reload();
+    } catch(e) { _youBtn.textContent = 'Access denied :('; _youBtn.disabled = true; }
+  }
+  _youBtn.addEventListener('click', _populateCams);
+  function _onCamSelect() {
+    const val = _camSel.value;
+    if (!val) return;
+    console.log('camera selected:', val);
+    localStorage.setItem('viv_cam_dev', val);
+    localStorage.setItem(K.source, 'camera');
+    window.location.reload();
+  }
+  _camSel.addEventListener('change', _onCamSelect);
+  _camSel.addEventListener('input', _onCamSelect);
+  document.getElementById('camera-src-opt').addEventListener('click', async () => {
+    try {
+      const d = await navigator.mediaDevices.enumerateDevices();
+      if (d.some(x => x.kind === 'videoinput' && x.label)) _populateCams();
+    } catch(e) {}
+  });
+  if (localStorage.getItem(K.source) === 'camera' && localStorage.getItem('viv_cam_unlocked') === '1') {
+    _startCam(localStorage.getItem('viv_cam_dev') || null);
   }
 
   window.addEventListener('load', () => {
