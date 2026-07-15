@@ -241,6 +241,19 @@
   #settings-box h2 { font-size:16px; font-weight:400; color:#fff; letter-spacing:0.04em; }
   .field { display:flex; flex-direction:column; gap:6px; }
   .field label { font-size:11px; font-weight:400; color:rgba(255,255,255,0.45); letter-spacing:0.1em; text-transform:uppercase; }
+  .ac-wrap { position:relative; }
+  .ac-drop { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:200;
+    background:rgba(20,20,20,0.92); border:1px solid rgba(255,255,255,0.12); border-radius:8px;
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    box-shadow:0 6px 24px rgba(0,0,0,0.4); overflow:hidden; display:none; }
+  .ac-drop.open { display:block; }
+  .ac-item { padding:7px 12px; font-size:12px; font-family:'DM Sans',sans-serif; color:rgba(255,255,255,0.65);
+    cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.1s; }
+  .ac-item:last-child { border-bottom:none; }
+  .ac-item:hover, .ac-item.selected { background:rgba(255,255,255,0.08); color:#fff; }
+  .ac-item-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ac-item-count { font-size:10px; color:rgba(255,255,255,0.3); flex-shrink:0; }
   .field input[type=text], .field input[type=password] { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:#fff; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:300; padding:10px 14px; outline:none; transition:border-color 0.2s; }
   .field input:focus { border-color:rgba(255,255,255,0.35); }
   .field input::placeholder { color:rgba(255,255,255,0.25); }
@@ -272,8 +285,8 @@
   .dm-opt { flex:1; padding:9px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:rgba(255,255,255,0.4); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; text-align:center; transition:all 0.15s; }
   .dm-opt.active { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.35); color:#fff; }
   .src-opt.active { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.35); color:#fff; }
-  #e621-fields, #local-fields, #camera-fields { display:none; }
-  #e621-fields.visible, #local-fields.visible { display:flex; flex-direction:column; gap:16px; }
+  #e621-fields, #local-fields, #camera-fields, #inkbunny-fields { display:none; }
+  #e621-fields.visible, #local-fields.visible, #inkbunny-fields.visible { display:flex; flex-direction:column; gap:16px; }
 
   @media (max-width: 768px) {
     #clock-time { font-size: clamp(48px, 16vw, 80px); }
@@ -494,6 +507,15 @@
 <div id="unlock-pill" style="position:fixed;display:none;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;color:rgba(255,255,255,0.95);white-space:nowrap;pointer-events:none;z-index:99;font-family:'DM Sans',sans-serif;font-weight:300;">
   <svg id="unlock-pill-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg>
   <span id="unlock-pill-label"></span>
+</div>
+
+<!-- Secret code popup -->
+<div id="secret-popup" style="display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;">
+  <div id="secret-box" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;gap:14px;width:280px;backdrop-filter:blur(30px) saturate(0.7);-webkit-backdrop-filter:blur(30px) saturate(0.7);box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;letter-spacing:0.06em;">huh..?</div>
+    <input id="secret-input" type="text" autocomplete="off" spellcheck="false" placeholder="enter code" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 12px;outline:none;letter-spacing:0.08em;width:100%;box-sizing:border-box;"/>
+    <div id="secret-msg" style="font-size:11px;color:rgba(255,255,255,0.3);font-family:'DM Sans',sans-serif;min-height:16px;letter-spacing:0.04em;"></div>
+  </div>
 </div>
 
 <div id="ui">
@@ -722,6 +744,7 @@
 
     <div id="source-toggle">
       <button class="src-opt active" data-src="e621">e621</button>
+      <button class="src-opt" data-src="inkbunny" style="display:none;">Inkbunny</button>
       <button class="src-opt" data-src="local">Local file</button>
       <button class="src-opt" data-src="camera" id="camera-src-opt" style="display:none;">Camera</button>
     </div>
@@ -745,7 +768,10 @@
       </div>
       <div class="field">
         <label>Tags</label>
-        <input id="cfg-tags" type="text" placeholder="score:>50 rating:s" autocomplete="off"/>
+        <div class="ac-wrap">
+          <input id="cfg-tags" type="text" placeholder="score:>50 rating:s" autocomplete="off"/>
+          <div id="ac-drop-e621" class="ac-drop"></div>
+        </div>
         <div id="rating-filter" style="display:flex;gap:8px;margin-top:8px;justify-content:space-between;align-items:center;">
           <div style="display:flex;gap:8px;">
             <label class="rf-check safe-check">
@@ -762,6 +788,24 @@
             <button id="fit-screen-btn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;cursor:pointer;transition:all 0.15s;">fit aspect ratio</button>
             <button id="favs-btn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;cursor:pointer;transition:all 0.15s;">favs?</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="inkbunny-fields">
+      <div class="field">
+        <label>Username</label>
+        <input id="cfg-ib-user" type="text" placeholder="your inkbunny username" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input id="cfg-ib-pass" type="password" placeholder="••••••••" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label>Tags <span style="opacity:0.4;font-size:11px;">(space separated)</span></label>
+        <div class="ac-wrap">
+          <input id="cfg-ib-tags" type="text" placeholder="furry canine" autocomplete="off"/>
+          <div id="ac-drop-ib" class="ac-drop"></div>
         </div>
       </div>
     </div>
@@ -850,7 +894,7 @@
   const LOCAL_EXTS = ['mp4','gif','jpg','jpeg','png','webp'];
   // proxy URL — replace with your Cloudflare Worker URL after deploying
   const API = 'https://e621.net';
-  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration', tint:'viv_tint', ratings:'viv_ratings', uiHidden:'viv_ui_hidden', displayMode:'viv_display_mode' };
+  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration', tint:'viv_tint', ratings:'viv_ratings', uiHidden:'viv_ui_hidden', displayMode:'viv_display_mode', ibUser:'viv_ib_user', ibPass:'viv_ib_pass', ibTags:'viv_ib_tags', ibSid:'viv_ib_sid' };
   let favsActive = localStorage.getItem('viv_favs_active') === 'true';
   let fitScreenActive = localStorage.getItem('viv_fit_screen') === 'true';
 
@@ -1323,6 +1367,61 @@ No asterisks, no explanation, just the line.`;
     scoreBadge.style.display = 'flex';
     fetchCommentsForPost(post.id, user, key);
     if (localStorage.getItem('viv_insults_on') === '1') runInsultSequence(post);
+    addToSeenSet(post.id, user, key);
+  }
+
+  // ── Seen set ──────────────────────────────────────────────────────────────
+  async function getOrCreateSeenSet(user, key) {
+    const saved = localStorage.getItem('viv_seen_set_id');
+    if (saved) return saved;
+    const auth = 'Basic ' + btoa(user + ':' + key);
+    const shortname = 'hpg_seen_' + user.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
+    try {
+      // Try to create it first
+      const res = await fetch(`${API}/post_sets.json`, {
+        method: 'POST',
+        headers: { 'User-Agent': 'VivaldiStartpage/1.0', 'Authorization': auth, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          'post_set[name]': user + "'s Seen Homepage Posts",
+          'post_set[shortname]': shortname,
+          'post_set[description]': 'Posts seen via the Vivaldi homepage. Auto-managed.',
+          'post_set[is_public]': 'false'
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const id = data.id || data.post_set?.id;
+        if (id) { console.log('seen set created:', id); localStorage.setItem('viv_seen_set_id', String(id)); return String(id); }
+      }
+      // If creation failed (e.g. already exists), look it up by shortname
+      console.log('seen set create status:', res.status, '— trying lookup');
+      const lookup = await fetch(`${API}/post_sets.json?search[shortname]=${encodeURIComponent(shortname)}`, {
+        headers: { 'User-Agent': 'VivaldiStartpage/1.0', 'Authorization': auth }
+      });
+      if (lookup.ok) {
+        const sets = await lookup.json();
+        const set = Array.isArray(sets) ? sets[0] : sets;
+        const id = set?.id;
+        if (id) { console.log('seen set found:', id); localStorage.setItem('viv_seen_set_id', String(id)); return String(id); }
+      }
+      console.log('seen set lookup failed:', lookup.status);
+    } catch(e) { console.log('seen set error:', e); }
+    return null;
+  }
+
+  async function addToSeenSet(postId, user, key) {
+    if (!user || !key) return;
+    const setId = await getOrCreateSeenSet(user, key);
+    if (!setId) return;
+    const auth = 'Basic ' + btoa(user + ':' + key);
+    try {
+      const res = await fetch(`${API}/post_sets/${setId}/add_posts.json`, {
+        method: 'POST',
+        headers: { 'User-Agent': 'VivaldiStartpage/1.0', 'Authorization': auth, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ 'post_ids[]': postId })
+      });
+      if (!res.ok) console.log('add to seen set failed:', res.status);
+    } catch(e) { console.log('add to seen set error:', e); }
   }
 
   async function fetchCommentsForPost(postId, user, key) {
@@ -1381,12 +1480,106 @@ No asterisks, no explanation, just the line.`;
   function init() {
     const source = localStorage.getItem(K.source) || 'local';
     if (source === 'e621' && localStorage.getItem(K.user) && localStorage.getItem(K.key)) fetchE621('startup');
+    else if (source === 'inkbunny') fetchInkbunny('startup');
     else if (source === 'camera') { /* camera handled after DOM ready below */ }
     else fallbackLocal();
   }
   init();
 
-  document.getElementById('gross-btn').addEventListener('click', () => fetchE621());
+  document.getElementById('gross-btn').addEventListener('click', () => {
+    const source = localStorage.getItem(K.source) || 'e621';
+    if (source === 'inkbunny') fetchInkbunny();
+    else fetchE621();
+  });
+
+  // ── Inkbunny ──────────────────────────────────────────────────────────────
+  const IB = 'https://inkbunny.net';
+
+  // JSONP helper — injects a <script> tag and resolves with the parsed response
+  function ibJsonp(url) {
+    return new Promise((resolve, reject) => {
+      const cb = '_ib_' + Math.random().toString(36).slice(2);
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, 10000);
+      function cleanup() { clearTimeout(timeout); delete window[cb]; script.remove(); }
+      window[cb] = data => { cleanup(); resolve(data); };
+      script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb + '&output_mode=json';
+      script.onerror = () => { cleanup(); reject(new Error('script error')); };
+      document.head.appendChild(script);
+    });
+  }
+
+  async function ibLogin() {
+    const user = localStorage.getItem(K.ibUser);
+    const pass = localStorage.getItem(K.ibPass);
+    if (!user) { showError('Enter your Inkbunny username in settings.'); return null; }
+    try {
+      const data = await ibJsonp(`${IB}/api_login.php?username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass || '')}`);
+      if (data.error_code) { showError('Inkbunny login failed: ' + data.error_message); return null; }
+      localStorage.setItem(K.ibSid, data.sid);
+      return data.sid;
+    } catch(e) { showError('Inkbunny login error.'); return null; }
+  }
+
+  async function getIbSid() {
+    const saved = localStorage.getItem(K.ibSid);
+    if (saved) return saved;
+    return await ibLogin();
+  }
+
+  async function fetchInkbunny(callSource) {
+    grossBtn.style.display = 'flex';
+    let sid = await getIbSid();
+    if (!sid) return;
+    const tags = localStorage.getItem(K.ibTags) || '';
+    try {
+      // Search
+      let searchUrl = `${IB}/api_search.php?sid=${encodeURIComponent(sid)}&type=1,2,3,9&random=yes&submissions_per_page=10`;
+      if (tags) searchUrl += `&text=${encodeURIComponent(tags)}`;
+      console.log('inkbunny search:', tags || '(random)');
+      let searchData = await ibJsonp(searchUrl);
+      // Handle expired session
+      if (searchData.error_code === '2') {
+        localStorage.removeItem(K.ibSid);
+        sid = await ibLogin();
+        if (!sid) return;
+        searchUrl = searchUrl.replace(/sid=[^&]+/, 'sid=' + encodeURIComponent(sid));
+        searchData = await ibJsonp(searchUrl);
+      }
+      if (!searchData.submissions || !searchData.submissions.length) { showError('No Inkbunny results found.'); fallbackLocal(); return; }
+      const sub = searchData.submissions[Math.floor(Math.random() * searchData.submissions.length)];
+      // Fetch full details
+      const detailData = await ibJsonp(`${IB}/api_submissions.php?sid=${encodeURIComponent(sid)}&submission_ids=${sub.submission_id}`);
+      const files = detailData.submissions?.[0]?.files;
+      if (!files || !files.length) { fetchInkbunny(callSource); return; }
+      const file = files[0];
+      const url = file.file_url_full || file.file_url_screen;
+      const ext = (file.file_name || '').split('.').pop().toLowerCase();
+      const type = ext === 'mp4' || ext === 'webm' ? 'video/mp4' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
+      console.log('inkbunny post id:' + sub.submission_id);
+      applyMedia(url, type);
+      sauceBtn.href = 'https://inkbunny.net/s/' + sub.submission_id;
+      sauceBtn.style.display = 'flex';
+      currentPostId = sub.submission_id;
+      currentFileUrl = url;
+      currentFileExt = ext;
+      downloadBtn.style.display = 'flex';
+      hotBtn.style.display = 'none';
+      scoreBadge.style.display = 'flex';
+      scoreVal.textContent = detailData.submissions?.[0]?.favorites_count || '?';
+      const artistVal = document.getElementById('artist-val');
+      artistVal.innerHTML = '';
+      const artistSpan = document.createElement('span');
+      artistSpan.textContent = sub.username || '';
+      artistSpan.style.cursor = 'pointer';
+      artistSpan.title = 'View on Inkbunny';
+      artistSpan.addEventListener('click', () => window.open('https://inkbunny.net/' + sub.username, '_blank'));
+      artistVal.appendChild(artistSpan);
+      document.getElementById('artist-divider').style.display = sub.username ? '' : 'none';
+      ratingBadge.textContent = '';
+      ratingBadge.className = '';
+    } catch(e) { console.log('inkbunny error:', e); showError('Inkbunny error. Check your credentials.'); fallbackLocal(); }
+  }
 
   // favs button — toggles fav:<username> query without touching the visible tags input
   function updateFavsBtn() {
@@ -1480,6 +1673,9 @@ No asterisks, no explanation, just the line.`;
     document.getElementById('cfg-user').value = localStorage.getItem(K.user) || '';
     document.getElementById('cfg-key').value  = localStorage.getItem(K.key)  || '';
     document.getElementById('cfg-tags').value = localStorage.getItem(K.tags) || '';
+    document.getElementById('cfg-ib-user').value = localStorage.getItem(K.ibUser) || '';
+    document.getElementById('cfg-ib-pass').value = localStorage.getItem(K.ibPass) || '';
+    document.getElementById('cfg-ib-tags').value = localStorage.getItem(K.ibTags) || '';
     const savedRatings = JSON.parse(localStorage.getItem(K.ratings) || '["rating:s","rating:q","rating:e"]');
     ['rf-s','rf-q','rf-e'].forEach(id => {
       const el = document.getElementById(id);
@@ -1514,6 +1710,7 @@ No asterisks, no explanation, just the line.`;
     document.getElementById('e621-fields').classList.toggle('visible', src === 'e621');
     document.getElementById('local-fields').classList.toggle('visible', src === 'local');
     document.getElementById('camera-fields').classList.toggle('visible', src === 'camera');
+    document.getElementById('inkbunny-fields').classList.toggle('visible', src === 'inkbunny');
   }
 
   function closeSettings() {
@@ -1561,6 +1758,18 @@ No asterisks, no explanation, just the line.`;
       _stopCam();
       closeSettings();
       fetchE621();
+      return;
+    } else if (src === 'inkbunny') {
+      const ibUser = document.getElementById('cfg-ib-user').value.trim();
+      const ibPass = document.getElementById('cfg-ib-pass').value.trim();
+      const ibTags = document.getElementById('cfg-ib-tags').value.trim();
+      if (ibUser) localStorage.setItem(K.ibUser, ibUser);
+      if (ibPass) localStorage.setItem(K.ibPass, ibPass);
+      if (ibTags) localStorage.setItem(K.ibTags, ibTags);
+      localStorage.removeItem(K.ibSid); // force re-login on save
+      _stopCam();
+      closeSettings();
+      fetchInkbunny();
       return;
     } else if (src === 'camera') {
       const selVal = document.getElementById('camera-select').value;
@@ -2217,6 +2426,9 @@ No asterisks, no explanation, just the line.`;
   if (localStorage.getItem('viv_cam_unlocked') === '1') {
     document.getElementById('camera-src-opt').style.display = '';
   }
+  if (localStorage.getItem('viv_ib_unlocked') === '1') {
+    document.querySelector('.src-opt[data-src="inkbunny"]').style.display = '';
+  }
 
   // ── camera stream ─────────────────────────────────────────────────────────
   let _camStream = null, _camEl = null;
@@ -2278,6 +2490,192 @@ No asterisks, no explanation, just the line.`;
   if (localStorage.getItem(K.source) === 'camera' && localStorage.getItem('viv_cam_unlocked') === '1') {
     _startCam(localStorage.getItem('viv_cam_dev') || null);
   }
+
+  // ── Konami code (↑↑↓↓←→←→) → secret popup ───────────────────────────────
+  const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight'];
+  let _konamiPos = 0;
+  document.addEventListener('keydown', e => {
+    if (e.key === KONAMI[_konamiPos]) {
+      _konamiPos++;
+      if (_konamiPos === KONAMI.length) {
+        _konamiPos = 0;
+        openSecretPopup();
+      }
+    } else {
+      _konamiPos = e.key === KONAMI[0] ? 1 : 0;
+    }
+  });
+
+  const secretPopup = document.getElementById('secret-popup');
+  const secretInput = document.getElementById('secret-input');
+  const secretMsg   = document.getElementById('secret-msg');
+
+  async function _sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  const SECRET_CODES = {
+    '89e8b9518d92279489bbdee26f3dc646d921d89a15afbd3a3e0ad695328a3da0': { icon: '<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>', label: 'Camera wallpaper', action: () => {
+      const unlocked = localStorage.getItem('viv_cam_unlocked') === '1';
+      if (unlocked) {
+        document.getElementById('camera-src-opt').style.display = 'none';
+        localStorage.setItem('viv_cam_unlocked', '');
+        if (localStorage.getItem(K.source) === 'camera') { localStorage.setItem(K.source, 'e621'); setActiveSource('e621'); _stopCam(); }
+        return false;
+      }
+      document.getElementById('camera-src-opt').style.display = '';
+      localStorage.setItem('viv_cam_unlocked', '1');
+      return true;
+    }},
+    'fd79757d98d22c6a6c08f8965b0c960222d4ae2399d36adbb05f2a2c3b7c958b': { icon: '<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>', label: 'Enable insults', action: () => {
+      const unlocked = localStorage.getItem('viv_insults_on') === '1';
+      if (unlocked) {
+        localStorage.setItem('viv_insults_on', '0');
+        document.getElementById('cfg-insults').checked = false;
+        return false;
+      }
+      const first = localStorage.getItem('viv_insults_on') === null;
+      localStorage.setItem('viv_insults_on', '1');
+      document.getElementById('cfg-insults-row').style.display = '';
+      document.getElementById('cfg-insults').checked = true;
+      return first;
+    }},
+    '4c6919d72681ee73de4df5578a590d452d60401f2d4b7508a5242b678a707268': { icon: '<circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/>', label: 'Inkbunny', action: () => {
+      const unlocked = localStorage.getItem('viv_ib_unlocked') === '1';
+      if (unlocked) {
+        localStorage.setItem('viv_ib_unlocked', '');
+        document.querySelector('.src-opt[data-src="inkbunny"]').style.display = 'none';
+        if (localStorage.getItem(K.source) === 'inkbunny') { localStorage.setItem(K.source, 'e621'); setActiveSource('e621'); }
+        return false;
+      }
+      localStorage.setItem('viv_ib_unlocked', '1');
+      document.querySelector('.src-opt[data-src="inkbunny"]').style.display = '';
+      return true;
+    }},
+  };
+
+  function openSecretPopup() {
+    secretInput.value = '';
+    secretMsg.textContent = '';
+    secretPopup.style.display = 'flex';
+    setTimeout(() => secretInput.focus(), 50);
+  }
+  function closeSecretPopup() {
+    secretPopup.style.display = 'none';
+  }
+
+  secretPopup.addEventListener('click', e => { if (e.target === secretPopup) closeSecretPopup(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && secretPopup.style.display !== 'none') closeSecretPopup(); });
+
+  secretInput.addEventListener('keydown', async e => {
+    if (e.key !== 'Enter') return;
+    const code = secretInput.value.trim().toLowerCase();
+    const hash = await _sha256(code);
+    const entry = SECRET_CODES[hash];
+    if (!entry) {
+      secretMsg.style.color = 'rgba(255,100,100,0.7)';
+      secretMsg.textContent = 'unknown code';
+      return;
+    }
+    const playAnim = entry.action();
+    secretMsg.style.color = playAnim ? 'rgba(100,255,150,0.7)' : 'rgba(255,100,100,0.6)';
+    secretMsg.textContent = playAnim ? 'unlocked!' : 'locked.';
+    setTimeout(() => {
+      closeSecretPopup();
+      if (playAnim) _playUnlockAnim(entry.icon, entry.label);
+    }, 600);
+  });
+
+  // ── Tag autocomplete ──────────────────────────────────────────────────────
+  function setupTagAutocomplete(inputId, dropId, fetchFn) {
+    const input = document.getElementById(inputId);
+    const drop  = document.getElementById(dropId);
+    let debounce = null, selIdx = -1, lastResults = [];
+    const cache = {};
+
+    function getPartial() {
+      const parts = input.value.split(/\s+/);
+      return parts[parts.length - 1] || '';
+    }
+    function replacePartial(tag) {
+      const parts = input.value.split(/\s+/);
+      parts[parts.length - 1] = tag;
+      input.value = parts.join(' ') + ' ';
+      close();
+      input.focus();
+    }
+    function render(results) {
+      lastResults = results;
+      selIdx = -1;
+      drop.innerHTML = '';
+      if (!results.length) { close(); return; }
+      const frag = document.createDocumentFragment();
+      results.forEach(r => {
+        const el = document.createElement('div');
+        el.className = 'ac-item';
+        el.innerHTML = `<span class="ac-item-name">${r.name.replace(/_/g,' ')}</span><span class="ac-item-count">${r.count != null ? r.count.toLocaleString() : ''}</span>`;
+        el.addEventListener('mousedown', e => { e.preventDefault(); replacePartial(r.name); });
+        frag.appendChild(el);
+      });
+      drop.appendChild(frag);
+      drop.classList.add('open');
+    }
+    function close() { drop.classList.remove('open'); drop.innerHTML = ''; selIdx = -1; }
+
+    let abortCtrl = null;
+    input.addEventListener('input', () => {
+      clearTimeout(debounce);
+      const partial = getPartial();
+      if (partial.length < 2) { close(); return; }
+      if (cache[partial]) { render(cache[partial]); return; }
+      debounce = setTimeout(async () => {
+        if (abortCtrl) abortCtrl.abort();
+        abortCtrl = new AbortController();
+        const results = await fetchFn(partial, abortCtrl.signal);
+        if (results) { cache[partial] = results; render(results); }
+      }, 250);
+    });
+
+    input.addEventListener('keydown', e => {
+      const items = drop.querySelectorAll('.ac-item');
+      if (!items.length) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); selIdx = Math.min(selIdx + 1, items.length - 1); items.forEach((el,i) => el.classList.toggle('selected', i === selIdx)); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); selIdx = Math.max(selIdx - 1, 0); items.forEach((el,i) => el.classList.toggle('selected', i === selIdx)); }
+      else if (e.key === 'Enter' || e.key === 'Tab') { if (selIdx >= 0 && lastResults[selIdx]) { e.preventDefault(); replacePartial(lastResults[selIdx].name); } }
+      else if (e.key === 'Escape') close();
+    });
+
+    document.addEventListener('click', e => { if (!input.contains(e.target) && !drop.contains(e.target)) close(); });
+  }
+
+  // e621 autocomplete
+  async function fetchE621Tags(partial, signal) {
+    const user = localStorage.getItem(K.user), key = localStorage.getItem(K.key);
+    if (!user || !key) return [];
+    try {
+      const res = await fetch(`${API}/tags.json?search[name_matches]=${encodeURIComponent(partial)}*&search[order]=count&limit=8`, {
+        headers: { 'User-Agent':'VivaldiStartpage/1.0', 'Authorization':'Basic ' + btoa(user+':'+key) },
+        signal
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return (data || []).map(t => ({ name: t.name, count: t.post_count }));
+    } catch(e) { return e.name === 'AbortError' ? null : []; }
+  }
+
+  // Inkbunny autocomplete via JSONP
+  async function fetchIbTags(partial) {
+    const sid = localStorage.getItem(K.ibSid);
+    if (!sid) return [];
+    try {
+      const data = await ibJsonp(`https://inkbunny.net/api_search_autosuggest.php?keyword=${encodeURIComponent(partial)}&ratingsmask=11111`);
+      return (data.results || []).slice(0, 8).map(r => ({ name: r.singleword, count: parseInt(r.submissions_count) || null }));
+    } catch(e) { return []; }
+  }
+
+  setupTagAutocomplete('cfg-tags',    'ac-drop-e621', fetchE621Tags);
+  setupTagAutocomplete('cfg-ib-tags', 'ac-drop-ib',   fetchIbTags);
 
   window.addEventListener('load', () => {
     if (!isMobile) searchInput.focus();
