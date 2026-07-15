@@ -83,7 +83,7 @@
   #search-btn:hover { background:rgba(255,255,255,0.3); }
   #search-btn svg { width:16px; height:16px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 
-  .corner-btn { position:fixed; bottom:22px; z-index:10; display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; letter-spacing:0.06em; padding:7px 13px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
+  .corner-btn { position:fixed; bottom:22px; z-index:101; display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:300; letter-spacing:0.06em; padding:7px 13px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,color 0.2s,border-color 0.2s; }
   .corner-btn:hover { background:rgba(255,255,255,0.16); color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.3); }
   .corner-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 
@@ -212,7 +212,7 @@
   #comment-user { font-size:11px; font-weight:400; color:rgba(255,255,255,0.45); letter-spacing:0.06em; }
   #comment-text { font-size:13px; font-weight:300; color:rgba(255,255,255,0.8); line-height:1.5; word-break:break-word; }
 
-  #settings-panel { display:none; position:fixed; inset:0; z-index:50; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition:background 0.4s ease, backdrop-filter 0.4s ease; }
+  #settings-panel { display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition:background 0.4s ease, backdrop-filter 0.4s ease; }
   #settings-panel.open { display:flex; }
   #settings-panel.opening { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
   #settings-panel.closing { background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
@@ -414,6 +414,20 @@
   }
   #err-toast.show { opacity:1; }
 
+  #insult-toast {
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+    z-index:50; max-width:480px;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px;
+    padding:5px 14px;
+    font-size:12px; color:rgba(255,255,255,0.5);
+    font-family:'DM Sans',sans-serif; font-weight:300; letter-spacing:0.04em;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    opacity:0; pointer-events:none;
+    transition:opacity 0.4s ease;
+    text-align:center; white-space:normal; line-height:1.5;
+  }
+  #insult-toast.show { opacity:1; }
+
   .pool-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:8px; }
   .pool-name { width:90px; flex-shrink:0; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:400; padding:6px 10px; outline:none; transition:border-color 0.2s; }
   .pool-name::placeholder { color:rgba(255,255,255,0.2); }
@@ -474,7 +488,13 @@
 </div>
 <div id="bg-blur"></div>
 <div id="err-toast"></div>
+<div id="insult-toast"></div>
 <div id="overlay"></div>
+<div id="unlock-backdrop" style="position:fixed;inset:0;z-index:98;background:rgba(0,0,0,0);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);pointer-events:none;transition:background 0.4s ease,backdrop-filter 0.4s ease,-webkit-backdrop-filter 0.4s ease;"></div>
+<div id="unlock-pill" style="position:fixed;display:none;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;color:rgba(255,255,255,0.95);white-space:nowrap;pointer-events:none;z-index:99;font-family:'DM Sans',sans-serif;font-weight:300;">
+  <svg id="unlock-pill-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg>
+  <span id="unlock-pill-label"></span>
+</div>
 
 <div id="ui">
   <div id="greeting"></div>
@@ -800,6 +820,10 @@
       <label class="check-row">
         <input id="cfg-comments" type="checkbox"/><span class="cb-box"></span>
         <span>Show comment overlay</span>
+      </label>
+      <label class="check-row" id="cfg-insults-row" style="display:none;">
+        <input id="cfg-insults" type="checkbox"/><span class="cb-box"></span>
+        <span>Enable insults</span>
       </label>
     </div>
 
@@ -1165,6 +1189,67 @@
     }
   }
 
+  // ── Venice AI insult ──────────────────────────────────────────────────────
+  const VENICE_KEY = 'VENICE_INFERENCE_KEY_KRcbEUnUX5OM65ICv-m0I59Dtnq1ntqFoveUKEOmiV';
+  const insultToast = document.getElementById('insult-toast');
+  let insultTimer = null;
+
+  async function fetchInsult(post) {
+    const tags = post.tags || {};
+    const allTags = [
+      ...(tags.character || []),
+      ...(tags.species || []),
+      ...(tags.general || []).slice(0, 20),
+      ...(tags.copyright || []),
+    ].map(t => t.replace(/_/g, ' ')).join(', ');
+    const artist = (tags.artist || []).filter(a => a !== 'conditional_dnp').map(a => a.replace(/_/g, ' ')).join(', ');
+    const rating = post.rating === 'e' ? 'explicit' : post.rating === 'q' ? 'questionable' : 'safe';
+    const ratingPrompt = `Tags: ${allTags}${artist ? ', by ' + artist : ''}. Rating: ${rating}.
+${rating === 'explicit' ? 'Write ONE brutally short sexual insult (under 10 words) targeting the viewer (singular) for either: masturbating, viewing, or searching to this. Name the specific characters and/or call out the most taboo fetishes present such as: incest, rape, cub, necrophilia, somnophilia, etc. dont use the word taboo. IMPORTANT: IF TAGS: CUB, YOUNG, OR CHILD ARE USED IN POST, CALL USER A PEDOPHILE/PEDO' : rating === 'questionable' ? 'Write ONE short teasing mock (under 10 words) calling out the viewer for being into this. Mention the characters.' : 'Write ONE short dry remark (under 15 words) acknowledging what the viewer is looking at. Mention what/who is in it.'}
+No asterisks, no explanation, just the line.`;
+    try {
+      const res = await fetch('https://api.venice.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + VENICE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'venice-uncensored',
+          max_tokens: 60,
+          temperature: 0.9,
+          venice_parameters: { strip_thinking_response: true },
+          messages: [{ role: 'user', content: ratingPrompt }]
+        })
+      });
+      if (!res.ok) { console.log('venice error:', res.status); return; }
+      const data = await res.json();
+      const msg = data.choices?.[0]?.message;
+      const raw = (msg?.content?.trim() || msg?.reasoning_content?.trim()) || '';
+      const cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+      if (!cleaned) return null;
+      console.log('insult:', cleaned);
+      return cleaned;
+    } catch(e) { return null; }
+  }
+
+  async function runInsultSequence(post) {
+    const rating = post.rating === 'e' ? 'explicit' : post.rating === 'q' ? 'questionable' : 'safe';
+    const count = rating === 'explicit' ? 3 : rating === 'questionable' ? 2 : 1;
+    const seqId = Symbol();
+    insultToast._seqId = seqId;
+    clearTimeout(insultTimer);
+    insultToast.classList.remove('show');
+    for (let i = 0; i < count; i++) {
+      if (insultToast._seqId !== seqId) return;
+      const text = await fetchInsult(post);
+      if (!text || insultToast._seqId !== seqId) return;
+      insultToast.textContent = text;
+      insultToast.classList.add('show');
+      await new Promise(r => { insultTimer = setTimeout(r, 4000); });
+      if (insultToast._seqId !== seqId) return;
+      insultToast.classList.remove('show');
+      if (i < count - 1) await new Promise(r => { insultTimer = setTimeout(r, 500); });
+    }
+  }
+
   function applyPost(post, user, key) {
     console.log('post id:' + post.id);
     const ext  = post.file.ext.toLowerCase();
@@ -1237,6 +1322,7 @@
     else { ratingEl.textContent = ''; ratingEl.className = ''; }
     scoreBadge.style.display = 'flex';
     fetchCommentsForPost(post.id, user, key);
+    if (localStorage.getItem('viv_insults_on') === '1') runInsultSequence(post);
   }
 
   async function fetchCommentsForPost(postId, user, key) {
@@ -1401,6 +1487,9 @@
     });
     document.getElementById('cfg-start-muted').checked = localStorage.getItem(K.startMuted) !== 'false';
     document.getElementById('cfg-comments').checked = localStorage.getItem(K.commentsVisible) !== 'false';
+    const insultsRow = document.getElementById('cfg-insults-row');
+    if (localStorage.getItem('viv_insults_on') !== null) insultsRow.style.display = '';
+    document.getElementById('cfg-insults').checked = localStorage.getItem('viv_insults_on') === '1';
     const sv = localStorage.getItem(K.volume) || '100';
     volSlider.value = sv; volVal.textContent = sv + '%';
     const autoSkipSaved = localStorage.getItem(K.autoSkip) !== 'false';
@@ -1449,6 +1538,9 @@
     if (tintEl) localStorage.setItem(K.tint, tintEl.value);
     commentsVisible = document.getElementById('cfg-comments').checked;
     localStorage.setItem(K.commentsVisible, commentsVisible ? 'true' : 'false');
+    if (localStorage.getItem('viv_insults_on') !== null) {
+      localStorage.setItem('viv_insults_on', document.getElementById('cfg-insults').checked ? '1' : '0');
+    }
     applyCommentVisibility();
     const rows = poolsList.querySelectorAll('.pool-row');
     savePools([...rows].map(row => ({
@@ -2002,6 +2094,88 @@
 
 
   // ── eye-btn: 5 clicks in 2s unlocks Camera source ────────────────────────
+  // ── unlock animation ──────────────────────────────────────────────────────
+  function _sineInOut(t) { return -(Math.cos(Math.PI * t) - 1) / 2; }
+
+  function _playUnlockAnim(iconPath, label) {
+    const backdrop = document.getElementById('unlock-backdrop');
+    const pill     = document.getElementById('unlock-pill');
+    const icon     = document.getElementById('unlock-pill-icon');
+    const lbl      = document.getElementById('unlock-pill-label');
+    const target   = settingsBtn; // the wallpaper settings button
+
+    icon.innerHTML = iconPath;
+    lbl.textContent = label;
+
+    // Show backdrop
+    backdrop.style.background = 'rgba(0,0,0,0.55)';
+    backdrop.style.backdropFilter = 'blur(8px)';
+    backdrop.style.webkitBackdropFilter = 'blur(8px)';
+
+    // Position pill at viewport center
+    pill.style.display = 'flex';
+    pill.style.opacity = '0';
+    pill.style.transform = 'scale(0.5)';
+    pill.style.left = '0px';
+    pill.style.top = '0px';
+    pill.style.transition = 'none';
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const pillRect   = pill.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const startX = window.innerWidth  / 2 - pillRect.width  / 2;
+      const startY = window.innerHeight / 2 - pillRect.height / 2;
+      const endX   = targetRect.left + targetRect.width  / 2 - pillRect.width  / 2;
+      const endY   = targetRect.top  + targetRect.height / 2 - pillRect.height / 2;
+
+      pill.style.left = startX + 'px';
+      pill.style.top  = startY + 'px';
+
+      const POP = 250, HOLD = 700, GLIDE = 750;
+      let s = null;
+
+      function pop(ts) {
+        if (!s) s = ts;
+        const p = Math.min((ts - s) / POP, 1);
+        const e = _sineInOut(p);
+        pill.style.opacity = e;
+        pill.style.transform = `scale(${0.5 + e * 0.5})`;
+        if (p < 1) requestAnimationFrame(pop);
+        else { s = null; requestAnimationFrame(hold); }
+      }
+      function hold(ts) {
+        if (!s) s = ts;
+        if (ts - s < HOLD) requestAnimationFrame(hold);
+        else { s = null; requestAnimationFrame(glide); }
+      }
+      function glide(ts) {
+        if (!s) s = ts;
+        const p = Math.min((ts - s) / GLIDE, 1);
+        const e = _sineInOut(p);
+        const x = startX + (endX - startX) * e;
+        const y = startY + (endY - startY) * e + Math.sin(p * Math.PI) * -55;
+        const scale   = 1 - e * 0.9;
+        const opacity = p < 0.55 ? 1 : 1 - _sineInOut((p - 0.55) / 0.45);
+        pill.style.left      = x + 'px';
+        pill.style.top       = y + 'px';
+        pill.style.transform = `scale(${scale})`;
+        pill.style.opacity   = opacity;
+        if (p < 1) requestAnimationFrame(glide);
+        else {
+          pill.style.display = 'none';
+          // shimmer settings button
+          settingsBtn.classList.add('shimmer-fx');
+          setTimeout(() => settingsBtn.classList.remove('shimmer-fx'), 750);
+          // fade out backdrop
+          backdrop.style.background = 'rgba(0,0,0,0)';
+          backdrop.style.backdropFilter = 'blur(0px)';
+          backdrop.style.webkitBackdropFilter = 'blur(0px)';
+        }
+      }
+      requestAnimationFrame(pop);
+    }));
+  }
+
   let _eyeN = 0, _eyeT = null;
   document.getElementById('eye-btn').addEventListener('click', () => {
     _eyeN++;
@@ -2018,8 +2192,26 @@
         setActiveSource('e621');
         _stopCam();
       }
-      settingsBtn.classList.add('shimmer-fx');
-      setTimeout(() => settingsBtn.classList.remove('shimmer-fx'), 750);
+      if (!wasVisible) _playUnlockAnim('<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>', 'Camera wallpaper');
+    }
+  }, true);
+
+  // mute-btn secret: 5 clicks in 2s toggles insult feature
+  let _muteN = 0, _muteT = null;
+  document.getElementById('mute-btn').addEventListener('click', () => {
+    _muteN++;
+    clearTimeout(_muteT);
+    _muteT = setTimeout(() => { _muteN = 0; }, 2000);
+    if (_muteN >= 5) {
+      _muteN = 0;
+      const wasOn = localStorage.getItem('viv_insults_on') === '1';
+      const firstTime = localStorage.getItem('viv_insults_on') === null;
+      const newVal = wasOn ? '0' : '1';
+      localStorage.setItem('viv_insults_on', newVal);
+      const insultsRow = document.getElementById('cfg-insults-row');
+      insultsRow.style.display = '';
+      document.getElementById('cfg-insults').checked = newVal === '1';
+      if (firstTime) _playUnlockAnim('<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>', 'Enable insults');
     }
   }, true);
   if (localStorage.getItem('viv_cam_unlocked') === '1') {
