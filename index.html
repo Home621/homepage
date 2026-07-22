@@ -225,8 +225,34 @@
     box-shadow:0 8px 48px rgba(0,0,0,0.35);
     width:min(460px,90vw); max-height:90vh;
     display:flex; flex-direction:column; gap:0;
-    overflow:hidden;
+    overflow:visible;
   }
+  #settings-inner { overflow:hidden; border-radius:16px; display:flex; flex-direction:column; flex:1; max-height:90vh; width:min(460px,90vw); }
+
+  /* Hotlinks sidebar — hangs off the right of the settings box */
+  #hl-sidebar {
+    position:absolute; left:calc(100% + 12px); top:0;
+    width:200px; max-height:90vh;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px;
+    backdrop-filter:blur(40px) saturate(0.6); -webkit-backdrop-filter:blur(40px) saturate(0.6);
+    box-shadow:0 8px 48px rgba(0,0,0,0.35);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  #hl-sidebar-title { font-size:12px; color:rgba(255,255,255,0.45); letter-spacing:0.06em; padding:14px 16px 10px; border-bottom:1px solid rgba(255,255,255,0.07); flex-shrink:0; display:flex; align-items:center; justify-content:space-between; }
+  #hl-sidebar-list { flex:1; overflow-y:auto; scrollbar-width:none; padding:10px; display:flex; flex-direction:column; gap:6px; }
+  #hl-sidebar-list::-webkit-scrollbar { display:none; }
+  .hl-row { display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:6px 8px; }
+  .hl-row img { width:14px; height:14px; object-fit:contain; border-radius:2px; flex-shrink:0; }
+  .hl-row-name { flex:1; font-size:11px; color:rgba(255,255,255,0.6); font-family:'DM Sans',sans-serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hl-row-pos { font-size:9px; color:rgba(255,255,255,0.25); font-family:'DM Sans',sans-serif; flex-shrink:0; }
+  .hl-row-edit { background:none; border:none; color:rgba(255,255,255,0.25); cursor:pointer; font-size:10px; padding:0; transition:color 0.15s; flex-shrink:0; }
+  .hl-row-edit:hover { color:rgba(255,255,255,0.7); }
+  .hl-row-del { background:none; border:none; color:rgba(255,80,80,0.3); cursor:pointer; font-size:11px; padding:0; transition:color 0.15s; flex-shrink:0; }
+  .hl-row-del:hover { color:rgba(255,80,80,0.8); }
+  #hl-add-btn { margin:10px; background:rgba(255,255,255,0.04); border:1px dashed rgba(255,255,255,0.12); border-radius:8px; color:rgba(255,255,255,0.3); font-family:'DM Sans',sans-serif; font-size:11px; padding:7px; cursor:pointer; transition:background 0.15s,color 0.15s; flex-shrink:0; }
+  #hl-add-btn:hover { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.6); }
   #settings-titlebar {
     display:flex; align-items:center; justify-content:space-between;
     padding:14px 18px 12px; flex-shrink:0;
@@ -441,6 +467,17 @@
   }
   #insult-toast.show { opacity:1; }
 
+  /* hotlinks */
+  #hotlinks-left, #hotlinks-right { position:fixed; top:50%; transform:translateY(-50%); z-index:10; display:flex; flex-direction:column; gap:8px; }
+  #hotlinks-left { left:22px; }
+  #hotlinks-right { right:22px; }
+  .hotlink-btn { width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,border-color 0.2s; text-decoration:none; overflow:hidden; position:relative; }
+  .hotlink-btn:hover { background:rgba(255,255,255,0.16); border-color:rgba(255,255,255,0.3); }
+  .hotlink-btn img { width:18px; height:18px; object-fit:contain; }
+  .hotlink-btn .hotlink-fallback { font-size:16px; line-height:1; }
+  .hotlink-btn[title]:hover::after { content:attr(title); position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%); background:rgba(20,20,20,0.85); border:1px solid rgba(255,255,255,0.12); border-radius:6px; padding:4px 10px; font-size:11px; color:rgba(255,255,255,0.75); font-family:'DM Sans',sans-serif; white-space:nowrap; pointer-events:none; backdrop-filter:blur(8px); }
+  #hotlinks-right .hotlink-btn[title]:hover::after { left:auto; right:calc(100% + 8px); }
+
   .pool-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:8px; }
   .pool-name { width:90px; flex-shrink:0; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:400; padding:6px 10px; outline:none; transition:border-color 0.2s; }
   .pool-name::placeholder { color:rgba(255,255,255,0.2); }
@@ -510,6 +547,27 @@
 </div>
 
 <!-- Secret code popup -->
+<div id="hotlinks-left"></div>
+<div id="hotlinks-right"></div>
+
+<div id="hotlink-modal" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;">
+  <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;gap:14px;width:280px;backdrop-filter:blur(30px) saturate(0.7);-webkit-backdrop-filter:blur(30px) saturate(0.7);box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;letter-spacing:0.06em;" id="hotlink-modal-title">add link</div>
+    <input id="hl-name" type="text" placeholder="name (tooltip)" autocomplete="off" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 12px;outline:none;width:100%;box-sizing:border-box;"/>
+    <input id="hl-url" type="text" placeholder="https://..." autocomplete="off" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 12px;outline:none;width:100%;box-sizing:border-box;"/>
+    <input id="hl-icon" type="text" placeholder="icon URL (or leave blank for favicon)" autocomplete="off" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 12px;outline:none;width:100%;box-sizing:border-box;"/>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="font-size:12px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;">position</span>
+      <button class="src-opt active" id="hl-pos-left" type="button" data-pos="left" style="flex:1;padding:6px;">left</button>
+      <button class="src-opt" id="hl-pos-right" type="button" data-pos="right" style="flex:1;padding:6px;">right</button>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button id="hl-save" type="button" style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;cursor:pointer;">save</button>
+      <button id="hl-cancel" type="button" style="flex:1;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;cursor:pointer;">cancel</button>
+    </div>
+  </div>
+</div>
+
 <div id="secret-popup" style="display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;">
   <div id="secret-box" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;gap:14px;width:280px;backdrop-filter:blur(30px) saturate(0.7);-webkit-backdrop-filter:blur(30px) saturate(0.7);box-shadow:0 8px 32px rgba(0,0,0,0.4);">
     <div style="font-size:12px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;letter-spacing:0.06em;">huh..?</div>
@@ -709,7 +767,8 @@
 
 <div id="settings-panel">
   <div id="settings-box">
-    <div id="settings-titlebar">
+    <div id="settings-inner">
+      <div id="settings-titlebar">
       <span>Wallpaper Settings</span>
       <button id="settings-close">×</button>
     </div>
@@ -877,6 +936,17 @@
     <div id="pools-list"></div>
     <button id="pool-add-btn" style="background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.15);border-radius:6px;color:rgba(255,255,255,0.35);font-family:'DM Sans',sans-serif;font-size:12px;padding:10px;cursor:pointer;transition:all 0.15s;text-align:center;width:100%;">+ Add pool</button>
     </div><!-- end settings-scroll -->
+    </div><!-- end settings-inner -->
+
+    <!-- Hotlinks sidebar -->
+    <div id="hl-sidebar">
+      <div id="hl-sidebar-title">
+        <span>Hotlinks</span>
+        <button id="hl-add-btn" type="button">+ add</button>
+      </div>
+      <div id="hl-sidebar-list"></div>
+    </div>
+
   </div><!-- end settings-box -->
 </div><!-- end settings-panel -->
 
@@ -894,7 +964,7 @@
   const LOCAL_EXTS = ['mp4','gif','jpg','jpeg','png','webp'];
   // proxy URL — replace with your Cloudflare Worker URL after deploying
   const API = 'https://e621.net';
-  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration', tint:'viv_tint', ratings:'viv_ratings', uiHidden:'viv_ui_hidden', displayMode:'viv_display_mode', ibUser:'viv_ib_user', ibPass:'viv_ib_pass', ibTags:'viv_ib_tags', ibSid:'viv_ib_sid' };
+  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration', tint:'viv_tint', ratings:'viv_ratings', uiHidden:'viv_ui_hidden', displayMode:'viv_display_mode', ibUser:'viv_ib_user', ibPass:'viv_ib_pass', ibTags:'viv_ib_tags', ibSid:'viv_ib_sid', hotlinks:'viv_hotlinks' };
   let favsActive = localStorage.getItem('viv_favs_active') === 'true';
   let fitScreenActive = localStorage.getItem('viv_fit_screen') === 'true';
 
@@ -2633,6 +2703,127 @@ No asterisks, no explanation, just the line.`;
 
   setupTagAutocomplete('cfg-tags',    'ac-drop-e621', fetchE621Tags);
   setupTagAutocomplete('cfg-ib-tags', 'ac-drop-ib',   fetchIbTags);
+
+  // ── Hotlinks ──────────────────────────────────────────────────────────────
+  function loadHotlinks() { try { return JSON.parse(localStorage.getItem(K.hotlinks) || '[]'); } catch(e) { return []; } }
+  function saveHotlinks(links) { localStorage.setItem(K.hotlinks, JSON.stringify(links)); }
+
+  function getFavicon(url) {
+    try {
+      const origin = new URL(url).origin;
+      return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(origin)}&sz=64`;
+    } catch(e) { return ''; }
+  }
+
+  function renderHotlinks() {
+    const links = loadHotlinks();
+    const leftEl  = document.getElementById('hotlinks-left');
+    const rightEl = document.getElementById('hotlinks-right');
+    leftEl.innerHTML = '';
+    rightEl.innerHTML = '';
+    links.forEach((link, i) => {
+      const a = document.createElement('a');
+      a.className = 'hotlink-btn';
+      a.href = link.url;
+      a.target = '_blank';
+      a.title = link.name || link.url;
+      const iconUrl = link.icon || getFavicon(link.url);
+      if (iconUrl) {
+        const img = document.createElement('img');
+        img.src = iconUrl;
+        img.onerror = () => { img.remove(); const span = document.createElement('span'); span.className = 'hotlink-fallback'; span.textContent = (link.name || '?')[0].toUpperCase(); a.appendChild(span); };
+        a.appendChild(img);
+      } else {
+        const span = document.createElement('span');
+        span.className = 'hotlink-fallback';
+        span.textContent = (link.name || '?')[0].toUpperCase();
+        a.appendChild(span);
+      }
+      (link.position === 'right' ? rightEl : leftEl).appendChild(a);
+    });
+    renderHotlinksList(links);
+  }
+
+  function renderHotlinksList(links) {
+    const list = document.getElementById('hl-sidebar-list');
+    if (!list) return;
+    list.innerHTML = '';
+    links.forEach((link, i) => {
+      const row = document.createElement('div');
+      row.className = 'hl-row';
+      const iconUrl = link.icon || getFavicon(link.url);
+      const img = document.createElement('img');
+      img.src = iconUrl;
+      img.onerror = () => img.style.display = 'none';
+      const name = document.createElement('span');
+      name.className = 'hl-row-name';
+      name.textContent = link.name || link.url;
+      const pos = document.createElement('span');
+      pos.className = 'hl-row-pos';
+      pos.textContent = link.position || 'left';
+      const editBtn = document.createElement('button');
+      editBtn.className = 'hl-row-edit';
+      editBtn.textContent = '✎';
+      editBtn.title = 'edit';
+      editBtn.addEventListener('click', () => openHotlinkModal(i));
+      const delBtn = document.createElement('button');
+      delBtn.className = 'hl-row-del';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', () => {
+        const links = loadHotlinks(); links.splice(i, 1); saveHotlinks(links); renderHotlinks();
+      });
+      row.append(img, name, pos, editBtn, delBtn);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById('hl-add-btn').addEventListener('click', () => openHotlinkModal(-1));
+  const hlModal = document.getElementById('hotlink-modal');
+  let _hlEditIdx = -1;
+
+  function openHotlinkModal(idx) {
+    const links = loadHotlinks();
+    _hlEditIdx = idx >= 0 ? idx : -1;
+    const link = idx >= 0 ? links[idx] : { name:'', url:'', icon:'', position:'left' };
+    document.getElementById('hl-name').value = link.name || '';
+    document.getElementById('hl-url').value  = link.url  || '';
+    document.getElementById('hl-icon').value = link.icon || '';
+    const pos = link.position || 'left';
+    document.getElementById('hl-pos-left').classList.toggle('active', pos === 'left');
+    document.getElementById('hl-pos-right').classList.toggle('active', pos === 'right');
+    document.getElementById('hotlink-modal-title').textContent = idx >= 0 ? 'edit link' : 'add link';
+    hlModal.style.display = 'flex';
+    setTimeout(() => document.getElementById('hl-name').focus(), 50);
+  }
+
+  document.getElementById('hl-pos-left').addEventListener('click', () => {
+    document.getElementById('hl-pos-left').classList.add('active');
+    document.getElementById('hl-pos-right').classList.remove('active');
+  });
+  document.getElementById('hl-pos-right').addEventListener('click', () => {
+    document.getElementById('hl-pos-right').classList.add('active');
+    document.getElementById('hl-pos-left').classList.remove('active');
+  });
+  document.getElementById('hl-cancel').addEventListener('click', () => { hlModal.style.display = 'none'; });
+  hlModal.addEventListener('click', e => { if (e.target === hlModal) hlModal.style.display = 'none'; });
+
+  document.getElementById('hl-save').addEventListener('click', () => {
+    const name = document.getElementById('hl-name').value.trim();
+    const url  = document.getElementById('hl-url').value.trim();
+    if (!url) return;
+    const icon = document.getElementById('hl-icon').value.trim();
+    const pos  = document.getElementById('hl-pos-left').classList.contains('active') ? 'left' : 'right';
+    const links = loadHotlinks();
+    const entry = { name, url, icon, position: pos };
+    if (_hlEditIdx >= 0) links[_hlEditIdx] = entry;
+    else links.push(entry);
+    saveHotlinks(links);
+    renderHotlinks();
+    hlModal.style.display = 'none';
+  });
+
+  document.getElementById('add-hotlink-btn').addEventListener('click', () => openHotlinkModal(-1));
+  renderHotlinks();
 
   window.addEventListener('load', () => {
     if (!isMobile) searchInput.focus();
