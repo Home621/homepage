@@ -842,6 +842,7 @@
         <button id="hl-add-btn" type="button">+ add</button>
       </div>
       <div id="hl-sidebar-list"></div>
+      <button id="hl-restore-btn" type="button" style="margin:0 10px 10px;background:none;border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:rgba(255,255,255,0.25);font-family:'DM Sans',sans-serif;font-size:11px;padding:6px 10px;cursor:pointer;transition:color 0.15s,border-color 0.15s;text-align:center;">↺ restore defaults</button>
     </div>
 
   </div><!-- end settings-box -->
@@ -1063,20 +1064,22 @@
   }
 
   function showImage(url) {
-    bgPrev.style.backgroundImage = bgCur.style.backgroundImage || 'none';
-    bgPrev.style.opacity = '1';
-    bgCur.style.opacity = '0';
     bgVideo.style.display = 'none'; bgGif.style.display = 'none';
     bgVideoPrev.style.display = 'none'; bgGifPrev.style.display = 'none';
     muteBtn.style.display = 'none';
 
     const img = new Image();
     img.onload = () => {
+      // copy current to prev, then swap — no gap
+      bgPrev.style.backgroundImage = bgCur.style.backgroundImage || 'none';
+      bgPrev.style.backgroundSize  = bgCur.style.backgroundSize;
+      bgPrev.style.opacity = '1';
       bgCur.style.backgroundImage = `url('${url}')`;
-      requestAnimationFrame(() => {
+      bgCur.style.opacity = '0';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
         bgCur.style.opacity = '1';
         bgPrev.style.opacity = '0';
-      });
+      }));
       startImageTimer();
     };
     img.src = url;
@@ -2490,28 +2493,24 @@ No asterisks, no explanation, just the line.`;
   function saveHotlinks(links) { localStorage.setItem(K.hotlinks, JSON.stringify(links)); }
 
   // For new users: seed hotlinks from GitHub Pages repos
-  async function seedGithubHotlinks() {
-    if (localStorage.getItem('viv_hotlinks_seeded')) return;
-    localStorage.setItem('viv_hotlinks_seeded', '1');
+  async function fetchDefaultHotlinks() {
     try {
       const res = await fetch('https://api.github.com/users/Home621/repos?per_page=100', {
         headers: { 'Accept': 'application/vnd.github+json' }
       });
-      if (!res.ok) return;
+      if (!res.ok) return null;
       const repos = await res.json();
-      const links = repos
-        .filter(r => r.has_pages)
-        .map(r => ({
-          name: r.name,
-          url: `https://home621.github.io/${r.name}/`,
-          icon: '',
-          position: 'left'
-        }));
-      if (links.length) {
-        saveHotlinks(links);
-        renderHotlinks();
-      }
-    } catch(e) {}
+      return repos
+        .filter(r => r.has_pages && !['homepage','banned'].includes(r.name.toLowerCase()))
+        .map(r => ({ name: r.name, url: `https://home621.github.io/${r.name}/`, icon: '', position: 'left' }));
+    } catch(e) { return null; }
+  }
+
+  async function seedGithubHotlinks() {
+    if (localStorage.getItem('viv_hotlinks_seeded')) return;
+    localStorage.setItem('viv_hotlinks_seeded', '1');
+    const links = await fetchDefaultHotlinks();
+    if (links && links.length) { saveHotlinks(links); renderHotlinks(); }
   }
   seedGithubHotlinks();
 
@@ -2631,6 +2630,15 @@ No asterisks, no explanation, just the line.`;
   });
 
   document.getElementById('hl-add-btn').addEventListener('click', () => openHotlinkModal(-1));
+
+  document.getElementById('hl-restore-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('hl-restore-btn');
+    btn.textContent = 'loading…'; btn.style.opacity = '0.5';
+    const links = await fetchDefaultHotlinks();
+    if (links && links.length) { saveHotlinks(links); renderHotlinks(); btn.textContent = '✓ restored'; }
+    else { btn.textContent = 'failed'; }
+    setTimeout(() => { btn.textContent = '↺ restore defaults'; btn.style.opacity = ''; }, 2000);
+  });
 
   window.addEventListener('load', () => {
     if (!isMobile) searchInput.focus();
