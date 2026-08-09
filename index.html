@@ -181,7 +181,13 @@
   #hl-sidebar-title { font-size:12px; color:rgba(255,255,255,0.45); letter-spacing:0.06em; padding:14px 16px 10px; border-bottom:1px solid rgba(255,255,255,0.07); flex-shrink:0; display:flex; align-items:center; justify-content:space-between; }
   #hl-sidebar-list { flex:1; overflow-y:auto; scrollbar-width:none; padding:10px; display:flex; flex-direction:column; gap:6px; }
   #hl-sidebar-list::-webkit-scrollbar { display:none; }
-  .hl-row { display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:6px 8px; }
+  .hl-row { display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:6px 8px; cursor:default; transition:background 0.15s, border-color 0.15s; }
+  .hl-row.drag-over { border-color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.1); }
+  .hl-row.dragging { opacity:0.4; }
+  .hl-drag { display:flex; flex-direction:column; gap:2px; cursor:grab; padding:2px 3px; flex-shrink:0; opacity:0.3; transition:opacity 0.15s; }
+  .hl-drag:active { cursor:grabbing; }
+  .hl-row:hover .hl-drag { opacity:0.7; }
+  .hl-drag span { display:block; width:10px; height:1.5px; background:rgba(255,255,255,0.8); border-radius:1px; }
   .hl-row img { width:14px; height:14px; object-fit:contain; border-radius:2px; flex-shrink:0; }
   .hl-row-name { flex:1; font-size:11px; color:rgba(255,255,255,0.6); font-family:'DM Sans',sans-serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .hl-row-pos { font-size:9px; color:rgba(255,255,255,0.25); font-family:'DM Sans',sans-serif; flex-shrink:0; }
@@ -553,6 +559,9 @@
   <a class="cb" id="cb-sauce" href="#" target="_blank" title="Source" style="text-decoration:none;">
     <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
   </a>
+  <button class="cb" id="cb-mute" title="Mute" style="display:none;">
+    <svg id="cb-mute-icon" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+  </button>
   <div class="cb-div"></div>
   <div id="cb-info">
     <span id="cb-artist"></span>
@@ -992,11 +1001,19 @@
   const SVG_MUTED = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`;
   const SVG_SOUND = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>`;
 
+  const cbMute     = document.getElementById('cb-mute');
+  const cbMuteIcon = document.getElementById('cb-mute-icon');
+
   function updateMuteUI() {
-    muteIcon.innerHTML = bgVideo.muted ? SVG_MUTED : SVG_SOUND;
-    muteLabel.textContent = bgVideo.muted ? 'Unmute' : 'Mute';
+    const muted = bgVideo.muted;
+    muteIcon.innerHTML = muted ? SVG_MUTED : SVG_SOUND;
+    muteLabel.textContent = muted ? 'Unmute' : 'Mute';
+    if (cbMuteIcon) cbMuteIcon.innerHTML = muted
+      ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>'
+      : '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>';
   }
   muteBtn.addEventListener('click', () => { bgVideo.muted = !bgVideo.muted; updateMuteUI(); });
+  if (cbMute) cbMute.addEventListener('click', () => { bgVideo.muted = !bgVideo.muted; updateMuteUI(); });
 
   function showVideo(url) {
     bgVideo.pause();
@@ -1030,6 +1047,7 @@
         }, 2200);
       });
       muteBtn.style.display = 'flex'; updateMuteUI();
+      if (cbMute) cbMute.style.display = 'flex';
     };
 
     bgVideo.oncanplay = tryPlay;
@@ -1314,17 +1332,17 @@ No asterisks, no explanation, just the line.`;
     currentFileExt = post.file.ext;
     downloadBtn.style.display = 'flex';
     hotBtn.style.display = 'flex';
-    hotBtn.classList.remove('faved');
+    hotBtn.classList.remove('faved'); hotBtn.classList.remove('active');
     // is_favorited is included in authenticated responses
     if (post.is_favorited === true) {
-      hotBtn.classList.add('faved');
+      hotBtn.classList.add('faved'); hotBtn.classList.add('active');
     } else if (post.is_favorited === undefined && user && key) {
       // fallback: check favorites endpoint directly
       const auth = 'Basic ' + btoa(user + ':' + key);
       fetch(`https://e621.net/favorites.json?user_id=${encodeURIComponent(user)}&limit=1&search[post_id]=${post.id}`, {
         headers: { 'Authorization': auth, 'User-Agent': 'VivaldiStartpage/1.0' }
       }).then(r => r.json()).then(d => {
-        if (d.posts && d.posts.length > 0) hotBtn.classList.add('faved');
+        if (d.posts && d.posts.length > 0) { hotBtn.classList.add('faved'); hotBtn.classList.add('active'); }
       }).catch(() => {});
     }
     const artists = (post.tags && post.tags.artist) ? post.tags.artist.filter(a => a !== 'conditional_dnp' && a !== 'sound_warning') : [];
@@ -1637,8 +1655,8 @@ No asterisks, no explanation, just the line.`;
         },
         body: new URLSearchParams({ post_id: currentPostId })
       });
-      if (res.ok) { hotBtn.classList.add('faved'); }
-      else if (res.status === 422) { hotBtn.classList.add('faved'); showError('Already in your favorites.'); }
+      if (res.ok) { hotBtn.classList.add('faved'); hotBtn.classList.add('active'); }
+      else if (res.status === 422) { hotBtn.classList.add('faved'); hotBtn.classList.add('active'); showError('Already in your favorites.'); }
       else if (res.status === 401) showError('Wrong credentials — can\'t favorite.');
       else if (res.status === 429) showError('Rate limited — try again in a moment.');
       else showError('Failed to favorite (error ' + res.status + ').');
@@ -2555,31 +2573,74 @@ No asterisks, no explanation, just the line.`;
     const list = document.getElementById('hl-sidebar-list');
     if (!list) return;
     list.innerHTML = '';
+    let dragSrcIdx = null;
+
     links.forEach((link, i) => {
       const row = document.createElement('div');
       row.className = 'hl-row';
+      row.draggable = true;
+      row.dataset.idx = i;
+
+      // drag handle (3 lines)
+      const handle = document.createElement('div');
+      handle.className = 'hl-drag';
+      handle.title = 'drag to reorder';
+      handle.innerHTML = '<span></span><span></span><span></span>';
+
       const iconUrl = link.icon || getFavicon(link.url);
       const img = document.createElement('img');
       img.src = iconUrl;
       img.onerror = () => img.style.display = 'none';
+
       const name = document.createElement('span');
       name.className = 'hl-row-name';
       name.textContent = link.name || link.url;
+
       const pos = document.createElement('span');
       pos.className = 'hl-row-pos';
       pos.textContent = link.position || 'left';
+
       const editBtn = document.createElement('button');
       editBtn.className = 'hl-row-edit';
       editBtn.textContent = '✎';
       editBtn.title = 'edit';
       editBtn.addEventListener('click', () => openHotlinkModal(i));
+
       const delBtn = document.createElement('button');
       delBtn.className = 'hl-row-del';
       delBtn.textContent = '✕';
       delBtn.addEventListener('click', () => {
-        const links = loadHotlinks(); links.splice(i, 1); saveHotlinks(links); renderHotlinks();
+        const ls = loadHotlinks(); ls.splice(i, 1); saveHotlinks(ls); renderHotlinks();
       });
-      row.append(img, name, pos, editBtn, delBtn);
+
+      row.append(handle, img, name, pos, editBtn, delBtn);
+
+      // drag events
+      row.addEventListener('dragstart', e => {
+        dragSrcIdx = i;
+        row.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('dragging');
+        list.querySelectorAll('.hl-row').forEach(r => r.classList.remove('drag-over'));
+      });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        list.querySelectorAll('.hl-row').forEach(r => r.classList.remove('drag-over'));
+        row.classList.add('drag-over');
+      });
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        if (dragSrcIdx === null || dragSrcIdx === i) return;
+        const ls = loadHotlinks();
+        const [moved] = ls.splice(dragSrcIdx, 1);
+        ls.splice(i, 0, moved);
+        saveHotlinks(ls);
+        renderHotlinks();
+      });
+
       list.appendChild(row);
     });
   }
