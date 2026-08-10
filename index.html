@@ -93,6 +93,16 @@
     backdrop-filter:blur(24px) saturate(0.8); -webkit-backdrop-filter:blur(24px) saturate(0.8);
     box-shadow:0 4px 32px rgba(0,0,0,0.4);
     opacity:0; transition:opacity 0.3s ease;
+    max-width: calc(100vw - 24px);
+    box-sizing: border-box;
+  }
+  /* back and next always visible, other cb items can collapse */
+  #back-btn, #gross-btn { flex-shrink:0; }
+  #cb-info { flex:1; min-width:0; overflow:hidden; }
+  /* on very narrow screens hide the middle info section to keep nav buttons */
+  @media (max-width: 400px) {
+    #cb-info, .cb-div { display:none; }
+    #cb-mute, #cb-sauce, #download-btn, #hot-btn { display:none !important; }
   }
   #ctrl-bar.visible { opacity:1; }
   .cb { display:flex; align-items:center; justify-content:center; width:36px; height:36px;
@@ -161,22 +171,29 @@
     border-radius:16px;
     backdrop-filter:blur(40px) saturate(0.6); -webkit-backdrop-filter:blur(40px) saturate(0.6);
     box-shadow:0 8px 48px rgba(0,0,0,0.35);
-    width:min(460px,90vw); max-height:90vh;
+    width:min(460px, 92vw); max-height:min(90vh, 90dvh);
     display:flex; flex-direction:column; gap:0;
     overflow:visible;
   }
-  #settings-inner { overflow:hidden; border-radius:16px; display:flex; flex-direction:column; flex:1; max-height:90vh; width:min(460px,90vw); }
+  #settings-inner { overflow:hidden; border-radius:16px; display:flex; flex-direction:column; flex:1; max-height:min(90vh, 90dvh); width:min(460px, 92vw); }
+  #settings-scroll { flex:1; overflow-y:auto; padding:clamp(12px,2vw,24px) clamp(14px,3vw,24px); display:flex; flex-direction:column; gap:clamp(14px,2vw,20px); scrollbar-width:none; }
+  #settings-scroll::-webkit-scrollbar { display:none; }
+  #settings-box h2 { font-size:clamp(13px,1.5vw,16px); font-weight:400; color:#fff; letter-spacing:0.04em; }
 
-  /* Hotlinks sidebar — hangs off the right of the settings box */
+  /* Hotlinks sidebar — hangs off the right, hidden if no room */
   #hl-sidebar {
     position:absolute; left:calc(100% + 12px); top:0;
-    width:200px; max-height:90vh;
+    width:200px; max-height:min(90vh, 90dvh);
     background:rgba(255,255,255,0.06);
     border:1px solid rgba(255,255,255,0.1);
     border-radius:16px;
     backdrop-filter:blur(40px) saturate(0.6); -webkit-backdrop-filter:blur(40px) saturate(0.6);
     box-shadow:0 8px 48px rgba(0,0,0,0.35);
     display:flex; flex-direction:column; overflow:hidden;
+  }
+  /* hide sidebar if viewport too narrow to fit it beside the settings box */
+  @media (max-width: 740px) {
+    #hl-sidebar { display:none; }
   }
   #hl-sidebar-title { font-size:12px; color:rgba(255,255,255,0.45); letter-spacing:0.06em; padding:14px 16px 10px; border-bottom:1px solid rgba(255,255,255,0.07); flex-shrink:0; display:flex; align-items:center; justify-content:space-between; }
   #hl-sidebar-list { flex:1; overflow-y:auto; scrollbar-width:none; padding:10px; display:flex; flex-direction:column; gap:6px; }
@@ -206,9 +223,6 @@
   #settings-titlebar span { font-size:13px; font-weight:400; color:rgba(255,255,255,0.55); letter-spacing:0.06em; }
   #settings-close { background:none; border:none; color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; line-height:1; padding:0 2px; transition:color 0.15s; }
   #settings-close:hover { color:rgba(255,255,255,0.8); }
-  #settings-scroll { flex:1; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:20px; scrollbar-width:none; }
-  #settings-scroll::-webkit-scrollbar { display:none; }
-  #settings-box h2 { font-size:16px; font-weight:400; color:#fff; letter-spacing:0.04em; }
   .field { display:flex; flex-direction:column; gap:6px; }
   .field label { font-size:11px; font-weight:400; color:rgba(255,255,255,0.45); letter-spacing:0.1em; text-transform:uppercase; }
   .ac-wrap { position:relative; }
@@ -261,25 +275,28 @@
   @media (max-width: 768px) {
     #clock-time { font-size: clamp(48px, 16vw, 80px); }
     #clock-date { font-size: 12px; }
-    #search { font-size: 14px; padding: 12px 48px 12px 18px; }
+    #search { font-size: 14px; padding: 11px 48px 11px 18px; }
     #comment-box { max-width: min(260px, 60vw); font-size: 12px; top: 8px; left: 8px; }
-    #settings-inner { padding: 0; }
-    #settings-scroll { padding: 16px; }
-    #hl-sidebar { display: none; }
-    #settings-box { width: 90vw; }
-    #hotlinks-left, #hotlinks-right { display: none; }
     #artist-strip { top:50% !important; left:50% !important; right:auto !important; transform:translate(-50%,-50%) !important; width:90vw; max-width:340px; }
-
-    /* hide all non-essential buttons on mobile */
-    #sauce-btn, #gross-btn, #hot-btn, #score-badge, #artist-more-btn,
-    #back-btn, #download-btn, #settings-btn, #mute-btn,
-    #ctrl-bar { display: none !important; }
-
-    /* keep eye-btn visible */
-    #eye-btn  { left: 8px; bottom: 8px; }
-  
-    /* show the ... button */
-    #mobile-menu-btn { display: flex !important; }
+    /* hide legacy drawer + side elements */
+    #sauce-btn, #hot-btn, #score-badge, #artist-more-btn,
+    #download-btn, #mute-btn { display: none !important; }
+    #mobile-menu-btn { display: none !important; }
+    #hotlinks-left, #hotlinks-right { display: none; }
+    /* ctrl-bar visible on mobile */
+    #ctrl-bar { bottom: 12px; transform: translateX(-50%); max-width: calc(100vw - 24px); }
+    /* settings + eye pills */
+    #settings-btn { bottom: 12px; right: 12px; }
+    #eye-btn { bottom: 12px; left: 12px; }
+    /* insult toast above ctrl-bar */
+    #insult-toast { bottom: 70px; }
+    /* settings panel scrollable on mobile */
+    #settings-panel { align-items:center; justify-content:flex-start; overflow-y:auto; padding:20px 0 60px; }
+    #settings-box { width:90vw; max-height:none; }
+    #settings-inner { max-height:none; width:90vw; overflow:visible; }
+    #settings-scroll { max-height:none; overflow:visible; padding:16px; }
+    /* hotlinks sidebar below settings on mobile */
+    #hl-sidebar { display:flex; position:static; width:90vw; border-radius:12px; max-height:none; margin-top:10px; left:auto; top:auto; }
   }
 
   #mobile-menu-btn {
@@ -512,6 +529,15 @@
       <button id="hl-save" type="button" style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;cursor:pointer;">save</button>
       <button id="hl-cancel" type="button" style="flex:1;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;cursor:pointer;">cancel</button>
     </div>
+  </div>
+</div>
+
+<div id="ai-comment-warning" style="display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);">
+  <div style="background:rgba(20,20,20,0.85);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:28px 32px;max-width:340px;display:flex;flex-direction:column;gap:14px;text-align:center;backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+    <div style="font-size:28px;">🤖</div>
+    <div style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.85);font-family:'DM Sans',sans-serif;letter-spacing:0.02em;">Comments are AI generated</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;line-height:1.6;">The comments shown are not real — they are generated by an AI based on the post content and may not reflect actual user opinions.</div>
+    <button id="ai-warning-dismiss" style="margin-top:4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.7);font-family:'DM Sans',sans-serif;font-size:13px;padding:9px 20px;cursor:pointer;transition:background 0.15s;">Got it</button>
   </div>
 </div>
 
@@ -796,6 +822,10 @@
         <input id="cfg-auto-skip" type="checkbox"/><span class="cb-box"></span>
         <span>Auto-skip to next post</span>
       </label>
+      <label class="check-row" id="cfg-video-wait-row" style="display:none;">
+        <input id="cfg-video-wait" type="checkbox"/><span class="cb-box"></span>
+        <span>Wait for video to finish</span>
+      </label>
     </div>
     <div class="field">
       <label>Default volume</label>
@@ -828,7 +858,7 @@
     <div id="cfg-prompt-section" style="display:none;flex-direction:column;gap:10px;">
       <label class="field" style="flex-direction:column;gap:6px;">
         <span style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;">Insult prompt</span>
-        <textarea id="cfg-insult-prompt" rows="5" placeholder="Enter custom prompt…" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:300;padding:10px 12px;outline:none;resize:vertical;width:100%;box-sizing:border-box;line-height:1.5;"></textarea>
+        <textarea id="cfg-insult-prompt" rows="5" placeholder="Additional instruction (e.g. focus on feet)…" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:300;padding:10px 12px;outline:none;resize:vertical;width:100%;box-sizing:border-box;line-height:1.5;"></textarea>
       </label>
       <div style="display:flex;gap:8px;">
         <button id="cfg-prompt-save" type="button" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.7);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px;cursor:pointer;transition:background 0.15s;">Save prompt</button>
@@ -879,7 +909,7 @@
   const LOCAL_EXTS = ['mp4','gif','jpg','jpeg','png','webp'];
   // proxy URL — replace with your Cloudflare Worker URL after deploying
   const API = 'https://e621.net';
-  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration', tint:'viv_tint', ratings:'viv_ratings', uiHidden:'viv_ui_hidden', displayMode:'viv_display_mode', ibUser:'viv_ib_user', ibPass:'viv_ib_pass', ibTags:'viv_ib_tags', ibSid:'viv_ib_sid', hotlinks:'viv_hotlinks' };
+  const K = { source:'viv_src', user:'viv_e6_user', key:'viv_e6_key', tags:'viv_e6_tags', wpData:'viv_wp_data', wpType:'viv_wp_type', startMuted:'viv_start_muted', name:'viv_name', volume:'viv_volume', pools:'viv_pools', commentsVisible:'viv_comments_vis', autoSkip:'viv_auto_skip', videoWait:'viv_video_wait', searchEngine:'viv_search_engine', localPath:'viv_local_path', imgDuration:'viv_img_duration', tint:'viv_tint', ratings:'viv_ratings', uiHidden:'viv_ui_hidden', displayMode:'viv_display_mode', ibUser:'viv_ib_user', ibPass:'viv_ib_pass', ibTags:'viv_ib_tags', ibSid:'viv_ib_sid', hotlinks:'viv_hotlinks' };
   let favsActive = localStorage.getItem('viv_favs_active') === 'true';
   let fitScreenActive = localStorage.getItem('viv_fit_screen') === 'true';
 
@@ -1125,6 +1155,7 @@
   function startImageTimer() {
     clearImageTimer();
     if (!autoSkipEnabled()) return;
+    if (currentMediaType === 'video' && videoWaitEnabled()) return;
     imageTimer = setTimeout(() => {
       const useBlur = currentMediaType !== 'video';
       if (useBlur) {
@@ -1139,13 +1170,20 @@
     }, getImgDuration());
   }
 
+  function videoWaitEnabled() { return localStorage.getItem(K.videoWait) === 'true'; }
+
   let videoSkipArmed = false;
   bgVideo.addEventListener('timeupdate', () => {
     if (!autoSkipEnabled() || !bgVideo.duration) return;
+    if (videoWaitEnabled()) return;
     if (bgVideo.currentTime >= bgVideo.duration - 0.5 && !videoSkipArmed) {
       videoSkipArmed = true;
       fetchE621('video-end auto-skip');
     }
+  });
+  bgVideo.addEventListener('ended', () => {
+    if (!autoSkipEnabled() || !videoWaitEnabled()) return;
+    fetchE621('video-ended auto-skip');
   });
   bgVideo.addEventListener('play', () => { videoSkipArmed = false; });
 
@@ -1174,6 +1212,10 @@
         commentUser.textContent = c.creator_name || 'anonymous';
         commentText.textContent = c.body.trim();
         commentBox.style.display = 'flex';
+          // show AI warning once
+          if (!localStorage.getItem('viv_ai_comment_warned')) {
+            document.getElementById('ai-comment-warning').style.display = 'flex';
+          }
         requestAnimationFrame(() => commentBox.classList.add('visible'));
         idx++;
       }, 500);
@@ -1265,11 +1307,10 @@
     const artist = (tags.artist || []).filter(a => a !== 'conditional_dnp').map(a => a.replace(/_/g, ' ')).join(', ');
     const rating = post.rating === 'e' ? 'explicit' : post.rating === 'q' ? 'questionable' : 'safe';
     const customPrompt = localStorage.getItem('viv_custom_prompt');
-    const ratingPrompt = customPrompt
-      ? `Tags: ${allTags}${artist ? ', by ' + artist : ''}. Rating: ${rating}.\n${customPrompt}\nNo asterisks, no explanation, just the line.`
-      : `Tags: ${allTags}${artist ? ', by ' + artist : ''}. Rating: ${rating}.
+    const basePrompt = `Tags: ${allTags}${artist ? ', by ' + artist : ''}. Rating: ${rating}.
 ${rating === 'explicit' ? 'Write ONE brutally short sexual insult (under 10 words) targeting the viewer (singular) for either: masturbating, viewing, or searching to this. Name the specific characters and/or call out the most taboo fetishes present such as: incest, rape, cub, necrophilia, somnophilia, etc. dont use the word taboo. IMPORTANT: IF TAGS: CUB, YOUNG, OR CHILD ARE USED IN POST, CALL USER A PEDOPHILE/PEDO' : rating === 'questionable' ? 'Write ONE short teasing mock (under 10 words) calling out the viewer for being into this. Mention the characters.' : 'Write ONE short dry remark (under 15 words) acknowledging what the viewer is looking at. Mention what/who is in it.'}
 No asterisks, no explanation, just the line.`;
+    const ratingPrompt = customPrompt ? `${basePrompt}\nAdditional instruction: ${customPrompt}` : basePrompt;
     try {
       const res = await fetch('https://api.venice.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -1752,6 +1793,7 @@ No asterisks, no explanation, just the line.`;
     if (seVal) localStorage.setItem(K.searchEngine, seVal);
     localStorage.setItem(K.autoSkip, autoSkipCheckbox.checked ? 'true' : 'false');
     if (autoSkipCheckbox.checked) localStorage.setItem(K.imgDuration, parseInt(imgDurationInput.value) || 7);
+    if (videoWaitCheck) localStorage.setItem(K.videoWait, videoWaitCheck.checked ? 'true' : 'false');
     const checkedRatingSave = [...document.querySelectorAll('#rating-filter input:checked')].map(i => i.value);
     localStorage.setItem(K.ratings, JSON.stringify(checkedRatingSave));
     const tintEl = document.getElementById('tint-slider');
@@ -2006,16 +2048,22 @@ No asterisks, no explanation, just the line.`;
   const autoSkipCheckbox = document.getElementById('cfg-auto-skip');
   const imgDurationField = document.getElementById('img-duration-field');
   const imgDurationInput = document.getElementById('img-duration-input');
+  const videoWaitRow     = document.getElementById('cfg-video-wait-row');
+  const videoWaitCheck   = document.getElementById('cfg-video-wait');
 
   function updateAutoSkipUI() {
     const enabled = autoSkipCheckbox.checked;
     imgDurationField.style.display = enabled ? 'block' : 'none';
+    if (videoWaitRow) videoWaitRow.style.display = enabled ? '' : 'none';
   }
 
   autoSkipCheckbox.addEventListener('change', updateAutoSkipUI);
-  // init state from localStorage
+  if (videoWaitCheck) videoWaitCheck.addEventListener('change', () => {
+    localStorage.setItem(K.videoWait, videoWaitCheck.checked ? 'true' : 'false');
+  });
   autoSkipCheckbox.checked = localStorage.getItem(K.autoSkip) !== 'false';
   imgDurationInput.value = parseInt(localStorage.getItem(K.imgDuration)) || 7;
+  if (videoWaitCheck) videoWaitCheck.checked = localStorage.getItem(K.videoWait) === 'true';
   updateAutoSkipUI();
 
   // post history for back button — stores last 10 posts
@@ -2356,16 +2404,14 @@ No asterisks, no explanation, just the line.`;
       if (unlocked) {
         localStorage.setItem('viv_insults_on', '0');
         document.getElementById('cfg-insults').checked = false;
+        document.getElementById('cfg-prompt-section').style.display = 'none';
+        localStorage.setItem('viv_prompt_unlocked', '');
         return false;
       }
       const first = localStorage.getItem('viv_insults_on') === null;
       localStorage.setItem('viv_insults_on', '1');
       document.getElementById('cfg-insults-row').style.display = '';
       document.getElementById('cfg-insults').checked = true;
-      return first;
-    }},
-    '083cf7471af73c5eaaec5ceecbe928db63118a7a39c961a8a42689c5050feeb8': { icon: '<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M15 5l4 4"/>', label: 'Edit insult prompt', action: () => {
-      const first = !localStorage.getItem('viv_prompt_unlocked');
       localStorage.setItem('viv_prompt_unlocked', '1');
       document.getElementById('cfg-prompt-section').style.display = 'flex';
       return first;
@@ -2382,6 +2428,23 @@ No asterisks, no explanation, just the line.`;
       document.querySelector('.src-opt[data-src="inkbunny"]').style.display = '';
       return true;
     }},
+    '0e2aad61c72169e5ab0027c6e929385886832d0155d1c06470094c7e0859e21f': { icon: '<rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/>', label: 'Unlock all', action: () => {
+      // camera
+      document.getElementById('camera-src-opt').style.display = '';
+      localStorage.setItem('viv_cam_unlocked', '1');
+      // insults
+      const firstInsults = localStorage.getItem('viv_insults_on') === null;
+      localStorage.setItem('viv_insults_on', '1');
+      document.getElementById('cfg-insults-row').style.display = '';
+      document.getElementById('cfg-insults').checked = true;
+      // prompt editor
+      localStorage.setItem('viv_prompt_unlocked', '1');
+      document.getElementById('cfg-prompt-section').style.display = 'flex';
+      // inkbunny
+      localStorage.setItem('viv_ib_unlocked', '1');
+      document.querySelector('.src-opt[data-src="inkbunny"]').style.display = '';
+      return true;
+    }},
   };
 
   function openSecretPopup() {
@@ -2393,6 +2456,11 @@ No asterisks, no explanation, just the line.`;
   function closeSecretPopup() {
     secretPopup.style.display = 'none';
   }
+
+  document.getElementById('ai-warning-dismiss').addEventListener('click', () => {
+    localStorage.setItem('viv_ai_comment_warned', '1');
+    document.getElementById('ai-comment-warning').style.display = 'none';
+  });
 
   secretPopup.addEventListener('click', e => { if (e.target === secretPopup) closeSecretPopup(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && secretPopup.style.display !== 'none') closeSecretPopup(); });
