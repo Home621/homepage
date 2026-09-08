@@ -122,6 +122,9 @@
   .cb svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
   .cb.active { color:var(--accent); }
   .cb.active svg { fill:var(--accent); stroke:var(--accent); }
+  @keyframes cb-spin { to { transform: rotate(360deg); } }
+  .cb.loading { pointer-events:none; opacity:0.5; }
+  .cb.loading svg { animation: cb-spin 0.8s linear infinite; }
   .cb-div { width:1px; height:20px; background:rgba(255,255,255,0.1); margin:0 4px; flex-shrink:0; }
   #cb-info { display:flex; flex-direction:column; align-items:flex-start; padding:0 10px 0 6px; gap:1px; min-width:60px; max-width:180px; }
   #cb-artist { font-size:11px; color:rgba(255,255,255,0.65); font-family:'DM Sans',sans-serif; font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px; cursor:pointer; }
@@ -160,16 +163,16 @@
     position:fixed; top:22px; left:22px; z-index:10;
     max-width:300px; min-width:160px;
     display:none; flex-direction:column; gap:4px;
-    background:rgba(255,255,255,0.07);
-    border:1px solid rgba(255,255,255,0.12);
-    border-radius:10px; padding:11px 15px;
-    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    opacity:0; transition:opacity 0.5s ease;
-    pointer-events:none;
+    background:var(--accent-glow);
+    border:1px solid var(--accent-faint);
+    border-radius:12px; padding:11px 15px;
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    opacity:0; transition:opacity 0.5s ease, transform 0.5s ease;
+    pointer-events:none; transform:translateY(-4px);
   }
-  #comment-box.visible { opacity:1; }
-  #comment-user { font-size:11px; font-weight:400; color:rgba(255,255,255,0.45); letter-spacing:0.06em; }
-  #comment-text { font-size:13px; font-weight:300; color:rgba(255,255,255,0.8); line-height:1.5; word-break:break-word; }
+  #comment-box.visible { opacity:1; transform:translateY(0); }
+  #comment-user { font-size:11px; font-weight:400; color:var(--accent-dim); letter-spacing:0.06em; }
+  #comment-text { font-size:13px; font-weight:300; color:rgba(255,255,255,0.85); line-height:1.55; word-break:break-word; }
 
   #settings-panel { display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition:background 0.4s ease, backdrop-filter 0.4s ease; }
   #settings-panel.open { display:flex; }
@@ -445,16 +448,36 @@
   #hotlinks-left, #hotlinks-right { position:fixed; top:50%; transform:translateY(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; }
 
   /* stickers */
-  .sticker {
-    position:fixed; z-index:15; pointer-events:none;
+  .sticker-wrap {
+    position:fixed; z-index:15;
     max-width:min(22vw, 220px); max-height:min(22vw, 220px);
-    object-fit:contain; filter:drop-shadow(0 4px 16px rgba(0,0,0,0.5));
     opacity:0; transition:opacity 0.6s ease;
     transform: rotate(var(--sticker-rot, 0deg));
+    transform-origin:center center;
   }
-  .sticker.loaded { opacity:1; }
-  #sticker-left  { bottom:80px; left:24px; }
-  #sticker-right { top:24px; right:24px; }
+  .sticker-wrap.loaded { opacity:1; }
+  #sticker-left-wrap  { bottom:80px; left:24px; }
+  #sticker-right-wrap { top:24px; right:24px; }
+  .sticker {
+    display:block; width:100%; height:100%;
+    max-width:min(22vw, 220px); max-height:min(22vw, 220px);
+    object-fit:contain; filter:drop-shadow(0 4px 16px rgba(0,0,0,0.5));
+    pointer-events:none;
+  }
+  .sticker-wrap.loaded { pointer-events:auto; }
+  .sticker-btn {
+    position:absolute; width:26px; height:26px;
+    border-radius:999px; border:none; cursor:pointer;
+    background:rgba(12,12,12,0.7); backdrop-filter:blur(8px);
+    color:rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity 0.2s, background 0.15s;
+    pointer-events:auto;
+  }
+  .sticker-btn svg { width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .sticker-btn:hover { background:rgba(40,40,40,0.9); color:#fff; }
+  .sticker-wrap:hover .sticker-btn { opacity:1; }
+  .sticker-sauce { top:-10px; right:-10px; }
+  .sticker-refresh { bottom:-10px; left:-10px; }
   #hotlinks-left { left:22px; }
   #hotlinks-right { right:22px; }
   .hotlink-btn { width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,border-color 0.2s; text-decoration:none; overflow:hidden; position:relative; }
@@ -535,8 +558,24 @@
 <!-- Secret code popup -->
 <div id="hotlinks-left"></div>
 <div id="hotlinks-right"></div>
-<img id="sticker-left"  class="sticker" alt="" style="display:none;"/>
-<img id="sticker-right" class="sticker" alt="" style="display:none;"/>
+<div id="sticker-left-wrap" class="sticker-wrap" style="display:none;">
+  <img id="sticker-left" class="sticker" alt=""/>
+  <button class="sticker-btn sticker-sauce" id="sticker-left-sauce" title="Source">
+    <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+  </button>
+  <button class="sticker-btn sticker-refresh" id="sticker-left-refresh" title="New sticker">
+    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+  </button>
+</div>
+<div id="sticker-right-wrap" class="sticker-wrap" style="display:none;">
+  <img id="sticker-right" class="sticker" alt=""/>
+  <button class="sticker-btn sticker-sauce" id="sticker-right-sauce" title="Source">
+    <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+  </button>
+  <button class="sticker-btn sticker-refresh" id="sticker-right-refresh" title="New sticker">
+    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+  </button>
+</div>
 
 <div id="hotlink-modal" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;">
   <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;gap:14px;width:280px;backdrop-filter:blur(30px) saturate(0.7);-webkit-backdrop-filter:blur(30px) saturate(0.7);box-shadow:0 8px 32px rgba(0,0,0,0.4);">
@@ -614,7 +653,7 @@
   </button>
   <div class="cb-div"></div>
   <div id="cb-info">
-    <span id="cb-artist"></span>
+    <span id="cb-artist" title="Search this artist" style="cursor:pointer;"></span>
     <span id="cb-score"></span>
   </div>
   <div class="cb-div"></div>
@@ -911,6 +950,10 @@
           <input id="cfg-stickers-auto" type="checkbox" checked/><span class="cb-box"></span>
           <span>Auto-pick daily</span>
         </label>
+        <label class="check-row">
+          <input id="cfg-stickers-sync" type="checkbox"/><span class="cb-box"></span>
+          <span>Refresh with wallpaper</span>
+        </label>
       </div>
       <div id="cfg-stickers-auto-search" style="display:none;flex-direction:column;gap:4px;">
         <div style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;">Auto-pick search tags</div>
@@ -957,8 +1000,6 @@
     document.getElementById('cfg-prompt-section').style.display = 'flex';
   }
 
-  window.onerror = (msg, src, line, col, err) => { console.error('CRASH line ' + line + ':', msg); };
-  window.addEventListener('unhandledrejection', e => { console.error('PROMISE:', e.reason); });
 
   // base path for local wallpaper — set by user in settings, no hardcoded paths
   // error toast — shows briefly at the bottom, auto-dismisses
@@ -1062,7 +1103,7 @@
       const a = document.createElement('a');
       a.href = currentFileUrl;
       a.download = filename;
-      a.target = '_blank';
+      a.target = '_self';
       a.click();
     }
   });
@@ -1374,9 +1415,17 @@
   }
 
   async function fetchE621(callSource) {
-    grossBtn.style.display = 'flex';
+    grossBtn.classList.add('loading');
     const user = localStorage.getItem(K.user);
     const key  = localStorage.getItem(K.key);
+
+    // use prefetched post instantly if available (not on startup)
+    if (_prefetchedPost && callSource !== 'startup') {
+      const post = _prefetchedPost;
+      _prefetchedPost = null;
+      applyPost(post, user, key);
+      return;
+    }
     const pool = getActivePool();
     const tags = favsActive
       ? 'fav:' + (user || '')
@@ -1414,7 +1463,6 @@
     const params = new URLSearchParams({ limit:1, tags: fullTags });
     const label = callSource || 'gross';
     try {
-      console.log(label + ' search:' + fullTags);
       const res = await fetch(`${API}/posts.json?${params}`, { headers:{ 'User-Agent':'VivaldiStartpage/1.0', 'Authorization': auth } });
       if (res.status === 401) throw new Error('401');
       if (res.status === 403) throw new Error('403');
@@ -1472,13 +1520,12 @@ No asterisks, no explanation, just the line.`;
           messages: [{ role: 'user', content: ratingPrompt }]
         })
       });
-      if (!res.ok) { console.log('venice error:', res.status); return; }
+      if (!res.ok) return;
       const data = await res.json();
       const msg = data.choices?.[0]?.message;
       const raw = (msg?.content?.trim() || msg?.reasoning_content?.trim()) || '';
       const cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
       if (!cleaned) return null;
-      console.log('insult:', cleaned);
       return cleaned;
     } catch(e) { return null; }
   }
@@ -1504,7 +1551,7 @@ No asterisks, no explanation, just the line.`;
   }
 
   function applyPost(post, user, key) {
-    console.log('post id:' + post.id);
+    grossBtn.classList.remove('loading');
     const ext  = post.file.ext.toLowerCase();
     const type = ext === 'mp4' || ext === 'webm' ? 'video/mp4' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
     currentMediaType = type === 'video/mp4' ? 'video' : 'image';
@@ -1516,12 +1563,9 @@ No asterisks, no explanation, just the line.`;
     pushHistory(post);
     sauceBtn.href = 'https://e621.net/posts/' + post.id;
     if (cbSauce) cbSauce.href = sauceBtn.href;
-    sauceBtn.style.display = 'flex';
     currentPostId = post.id;
     currentFileUrl = post.file.url;
     currentFileExt = post.file.ext;
-    downloadBtn.style.display = 'flex';
-    hotBtn.style.display = 'flex';
     hotBtn.classList.remove('faved'); hotBtn.classList.remove('active');
     // is_favorited is included in authenticated responses
     if (post.is_favorited === true) {
@@ -1565,6 +1609,7 @@ No asterisks, no explanation, just the line.`;
     }
     currentArtists = artists;
     window._currentPost = post;
+    if (stickersEnabled() && stickersSyncEnabled()) pickStickers();
     if (cbArtist) cbArtist.textContent = artists.length ? artists[0].replace(/_/g,' ') : '';
     artistStrip_.classList.remove('open');
     const score = (post.score && post.score.total !== undefined) ? post.score.total : null;
@@ -1577,16 +1622,24 @@ No asterisks, no explanation, just the line.`;
     else if (r === 'q') { ratingEl.textContent = 'Q'; ratingEl.className = 'quest'; }
     else if (r === 'e') { ratingEl.textContent = 'E'; ratingEl.className = 'explicit'; }
     else { ratingEl.textContent = ''; ratingEl.className = ''; }
-    scoreBadge.style.display = 'none'; ctrlBar.style.display = 'flex'; ctrlBar.classList.add('visible');
-    fetchCommentsForPost(post.id, user, key);
-    if (localStorage.getItem('viv_insults_on') === '1') runInsultSequence(post);
-    addToSeenSet(post.id, user, key);
+    ctrlBar.style.display = 'flex'; ctrlBar.classList.add('visible');
+    // defer non-critical work so image displays immediately
+    setTimeout(() => {
+      fetchCommentsForPost(post.id, user, key);
+      if (localStorage.getItem('viv_insults_on') === '1') runInsultSequence(post);
+      addToSeenSet(post.id, user, key);
+      prefetchNext(); // warm up next post in background
+    }, 100);
   }
 
   // ── Seen set ──────────────────────────────────────────────────────────────
+  let _seenSetPromise = null;
   async function getOrCreateSeenSet(user, key) {
     const saved = localStorage.getItem('viv_seen_set_id');
     if (saved) return saved;
+    // deduplicate concurrent calls — only one creation attempt at a time
+    if (_seenSetPromise) return _seenSetPromise;
+    _seenSetPromise = (async () => {
     const auth = 'Basic ' + btoa(user + ':' + key);
     const shortname = 'hpg_seen_' + user.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
     try {
@@ -1604,10 +1657,9 @@ No asterisks, no explanation, just the line.`;
       if (res.ok) {
         const data = await res.json();
         const id = data.id || data.post_set?.id;
-        if (id) { console.log('seen set created:', id); localStorage.setItem('viv_seen_set_id', String(id)); return String(id); }
+        if (id) { localStorage.setItem('viv_seen_set_id', String(id)); return String(id); }
       }
       // If creation failed (e.g. already exists), look it up by shortname
-      console.log('seen set create status:', res.status, '— trying lookup');
       const lookup = await fetch(`${API}/post_sets.json?search[shortname]=${encodeURIComponent(shortname)}`, {
         headers: { 'User-Agent': 'VivaldiStartpage/1.0', 'Authorization': auth }
       });
@@ -1615,11 +1667,14 @@ No asterisks, no explanation, just the line.`;
         const sets = await lookup.json();
         const set = Array.isArray(sets) ? sets[0] : sets;
         const id = set?.id;
-        if (id) { console.log('seen set found:', id); localStorage.setItem('viv_seen_set_id', String(id)); return String(id); }
+        if (id) { localStorage.setItem('viv_seen_set_id', String(id)); return String(id); }
       }
-      console.log('seen set lookup failed:', lookup.status);
-    } catch(e) { console.log('seen set error:', e); }
-    return null;
+    } catch(e) {}
+      return null;
+    })();
+    const result = await _seenSetPromise;
+    _seenSetPromise = null;
+    return result;
   }
 
   async function addToSeenSet(postId, user, key) {
@@ -1633,8 +1688,7 @@ No asterisks, no explanation, just the line.`;
         headers: { 'User-Agent': 'VivaldiStartpage/1.0', 'Authorization': auth, 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ 'post_ids[]': postId })
       });
-      if (!res.ok) console.log('add to seen set failed:', res.status);
-    } catch(e) { console.log('add to seen set error:', e); }
+    } catch(e) {}
   }
 
   async function fetchCommentsForPost(postId, user, key) {
@@ -1654,20 +1708,16 @@ No asterisks, no explanation, just the line.`;
   }
 
   function fallbackLocal() {
+    grossBtn.classList.remove('loading');
     clearImageTimer();
     clearTimeout(bgGif._loopTimer);
     clearInterval(commentCycle);
     commentBox.style.display = 'none';
-    sauceBtn.style.display = 'none';
     ctrlBar.style.display = 'none'; ctrlBar.classList.remove('visible');
-    hotBtn.style.display = 'none';
-    grossBtn.style.display = 'none';
     document.getElementById('artist-more-btn').style.display = 'none';
     artistStrip_.classList.remove('open');
     currentPostId = null;
     currentFileUrl = null;
-    downloadBtn.style.display = 'none';
-    scoreBadge.style.display = 'none';
     poolBadge.style.display = 'none';
     poolDivider.style.display = 'none';
     const d = localStorage.getItem(K.wpData), t = localStorage.getItem(K.wpType);
@@ -1689,6 +1739,44 @@ No asterisks, no explanation, just the line.`;
       p.onerror = () => tryLocalFile(i + 1);
       p.src = url;
     }
+  }
+
+  // ── Prefetch ───────────────────────────────────────────────────────────────
+  let _prefetchedPost = null;
+  let _prefetching = false;
+
+  async function prefetchNext() {
+    const source = localStorage.getItem(K.source) || 'e621';
+    if (source !== 'e621' || _prefetching) return;
+    const user = localStorage.getItem(K.user), key = localStorage.getItem(K.key);
+    if (!user || !key) return;
+    _prefetching = true;
+    try {
+      const pool = getActivePool();
+      const tags = favsActive
+        ? 'fav:' + (user || '')
+        : (pool ? pool.tags : (localStorage.getItem(K.tags) || 'score:>50'));
+      if (/^\d+$/.test(tags.trim())) return; // single post ID, nothing to prefetch
+      const checkedRatings = [...document.querySelectorAll('#rating-filter input:checked')].map(i => i.value);
+      const ratingFilter = checkedRatings.length === 1 ? ' ' + checkedRatings[0]
+        : (checkedRatings.length === 2 ? ' ~' + checkedRatings.join(' ~') : '');
+      const fullTags = tags + ratingFilter + getFitScreenRatioFilter() + ' order:random -flash';
+      const res = await fetch(`${API}/posts.json?limit=1&tags=${encodeURIComponent(fullTags)}`, {
+        headers: { 'User-Agent':'VivaldiStartpage/1.0', 'Authorization':'Basic ' + btoa(user+':'+key) }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const posts = (data.posts || []).filter(p => p.file && p.file.url);
+      if (posts.length) {
+        _prefetchedPost = posts[0];
+        // preload image into browser cache
+        if (posts[0].file.ext !== 'mp4' && posts[0].file.ext !== 'webm') {
+          const img = new Image();
+          img.src = posts[0].file.url;
+        }
+      }
+    } catch(e) {}
+    finally { _prefetching = false; }
   }
 
   function init() {
@@ -1742,7 +1830,6 @@ No asterisks, no explanation, just the line.`;
   }
 
   async function fetchInkbunny(callSource) {
-    grossBtn.style.display = 'flex';
     let sid = await getIbSid();
     if (!sid) return;
     const tags = localStorage.getItem(K.ibTags) || '';
@@ -1750,7 +1837,6 @@ No asterisks, no explanation, just the line.`;
       // Search
       let searchUrl = `${IB}/api_search.php?sid=${encodeURIComponent(sid)}&type=1,2,3,9&random=yes&submissions_per_page=10`;
       if (tags) searchUrl += `&text=${encodeURIComponent(tags)}`;
-      console.log('inkbunny search:', tags || '(random)');
       let searchData = await ibJsonp(searchUrl);
       // Handle expired session
       if (searchData.error_code === '2') {
@@ -1770,16 +1856,12 @@ No asterisks, no explanation, just the line.`;
       const url = file.file_url_full || file.file_url_screen;
       const ext = (file.file_name || '').split('.').pop().toLowerCase();
       const type = ext === 'mp4' || ext === 'webm' ? 'video/mp4' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
-      console.log('inkbunny post id:' + sub.submission_id);
       applyMedia(url, type);
       sauceBtn.href = 'https://inkbunny.net/s/' + sub.submission_id; if(cbSauce) cbSauce.href = sauceBtn.href;
-      sauceBtn.style.display = 'flex';
-      currentPostId = sub.submission_id;
+        currentPostId = sub.submission_id;
       currentFileUrl = url;
       currentFileExt = ext;
-      downloadBtn.style.display = 'flex';
-      hotBtn.style.display = 'none';
-      scoreBadge.style.display = 'none'; ctrlBar.style.display = 'flex'; ctrlBar.classList.add('visible');
+          ctrlBar.style.display = 'flex'; ctrlBar.classList.add('visible');
       scoreVal.textContent = detailData.submissions?.[0]?.favorites_count || '?';
       const artistVal = document.getElementById('artist-val');
       artistVal.innerHTML = '';
@@ -1792,7 +1874,7 @@ No asterisks, no explanation, just the line.`;
       document.getElementById('artist-divider').style.display = sub.username ? '' : 'none';
       ratingBadge.textContent = '';
       ratingBadge.className = '';
-    } catch(e) { console.log('inkbunny error:', e); showError('Inkbunny error. Check your credentials.'); fallbackLocal(); }
+    } catch(e) { showError('Inkbunny error. Check your credentials.'); fallbackLocal(); }
   }
 
   // favs button — toggles fav:<username> query without touching the visible tags input
@@ -1865,8 +1947,7 @@ No asterisks, no explanation, just the line.`;
     const reader = new FileReader();
     reader.onload = e => {
       applyMedia(e.target.result, file.type);
-      sauceBtn.style.display = 'none';
-      clearInterval(commentCycle); commentBox.style.display = 'none';
+        clearInterval(commentCycle); commentBox.style.display = 'none';
       try { localStorage.setItem(K.wpData, e.target.result); localStorage.setItem(K.wpType, file.type); localStorage.setItem(K.source, 'local'); } catch(err) {}
       closeSettings();
     };
@@ -1961,7 +2042,9 @@ No asterisks, no explanation, just the line.`;
       enabled: row.querySelector('.pool-toggle')?.classList.contains('on') !== false
     })).filter(p => p.tags));
     updateGreeting();
-    const src = document.querySelector('.src-opt.active').dataset.src;
+    const srcEl = document.querySelector('.src-opt.active');
+    if (!srcEl) return;
+    const src = srcEl.dataset.src;
     localStorage.setItem(K.source, src);
     if (src === 'e621') {
       const user = document.getElementById('cfg-user').value.trim();
@@ -1976,6 +2059,7 @@ No asterisks, no explanation, just the line.`;
       if (user) localStorage.setItem(K.user, user);
       if (key)  localStorage.setItem(K.key, key);
       if (tags) localStorage.setItem(K.tags, tags);
+      if (queryChanged) _prefetchedPost = null; // stale, discard
       _stopCam();
       closeSettings();
       if (queryChanged) fetchE621();
@@ -1999,8 +2083,7 @@ No asterisks, no explanation, just the line.`;
     } else {
       // local
       _stopCam();
-      sauceBtn.style.display = 'none';
-      clearInterval(commentCycle); commentBox.style.display = 'none';
+        clearInterval(commentCycle); commentBox.style.display = 'none';
       const d = localStorage.getItem(K.wpData), t = localStorage.getItem(K.wpType);
       if (d && t) { closeSettings(); applyMedia(d, t); return; }
       else tryLocalFile(0);
@@ -2221,7 +2304,10 @@ No asterisks, no explanation, just the line.`;
   let historyPos = -1;
   let navigatingBack = false;
 
-  if (cbArtist) cbArtist.addEventListener('click', () => { if (sauceBtn.href && sauceBtn.href !== '#') window.open(sauceBtn.href, '_blank'); });
+  if (cbArtist) cbArtist.addEventListener('click', () => {
+    if (currentArtists.length) window.open(`https://e621.net/posts?tags=${encodeURIComponent(currentArtists[0])}`, '_blank');
+    else if (cbSauce?.href && cbSauce.href !== '#') window.open(cbSauce.href, '_blank');
+  });
 
   // "From the artist" strip
   const artistStrip = document.getElementById('artist-strip');
@@ -2575,7 +2661,6 @@ No asterisks, no explanation, just the line.`;
   function _onCamSelect() {
     const val = _camSel.value;
     if (!val) return;
-    console.log('camera selected:', val);
     localStorage.setItem('viv_cam_dev', val);
     localStorage.setItem(K.source, 'camera');
     window.location.reload();
@@ -2704,6 +2789,20 @@ No asterisks, no explanation, just the line.`;
   secretPopup.addEventListener('click', e => { if (e.target === secretPopup) closeSecretPopup(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && secretPopup.style.display !== 'none') closeSecretPopup(); });
 
+  // ── Keyboard shortcuts ────────────────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+    if (panel.classList.contains('open')) return;
+    switch(e.key) {
+      case 'ArrowRight': case 'l': grossBtn.dispatchEvent(new MouseEvent('click',{bubbles:true})); break;
+      case 'ArrowLeft':  case 'j': backBtn.dispatchEvent(new MouseEvent('click',{bubbles:true})); break;
+      case 'f': hotBtn.dispatchEvent(new MouseEvent('click',{bubbles:true})); break;
+      case 's': if (cbSauce?.href && cbSauce.href !== '#') window.open(cbSauce.href,'_blank'); break;
+      case 'd': downloadBtn.dispatchEvent(new MouseEvent('click',{bubbles:true})); break;
+      case 'h': eyeBtn.dispatchEvent(new MouseEvent('click',{bubbles:true})); break;
+    }
+  });
+
   secretInput.addEventListener('keydown', async e => {
     if (e.key !== 'Enter') return;
     const code = secretInput.value.trim().toLowerCase();
@@ -2814,61 +2913,92 @@ No asterisks, no explanation, just the line.`;
   setupTagAutocomplete('cfg-ib-tags', 'ac-drop-ib',   fetchIbTags);
 
   // ── Stickers ───────────────────────────────────────────────────────────────
-  const stickerLeft  = document.getElementById('sticker-left');
-  const stickerRight = document.getElementById('sticker-right');
+  const stickerLeftWrap  = document.getElementById('sticker-left-wrap');
+  const stickerRightWrap = document.getElementById('sticker-right-wrap');
+  const stickerLeft      = document.getElementById('sticker-left');
+  const stickerRight     = document.getElementById('sticker-right');
+
+  // track sauce URLs per slot
+  let stickerLeftPostId  = null;
+  let stickerRightPostId = null;
 
   function stickersEnabled() { return localStorage.getItem('viv_stickers_on') === '1'; }
+  function stickersSyncEnabled() { return localStorage.getItem('viv_stickers_sync') === '1'; }
 
-  function showSticker(el, url) {
+  function showSticker(wrap, img, url, postId) {
     if (!url) return;
     const rot = (Math.random() * 20 - 10).toFixed(1);
-    el.style.setProperty('--sticker-rot', rot + 'deg');
-    el.style.display = '';
-    el.classList.remove('loaded');
-    el.onload = () => el.classList.add('loaded');
-    el.onerror = () => el.style.display = 'none';
-    el.src = url;
+    wrap.style.setProperty('--sticker-rot', rot + 'deg');
+    wrap.style.display = '';
+    wrap.classList.remove('loaded');
+    img.onload = () => wrap.classList.add('loaded');
+    img.onerror = () => wrap.style.display = 'none';
+    img.src = url;
+    if (wrap === stickerLeftWrap)  stickerLeftPostId  = postId;
+    if (wrap === stickerRightWrap) stickerRightPostId = postId;
   }
 
   function applySavedStickers() {
-    if (!stickersEnabled()) { stickerLeft.style.display = 'none'; stickerRight.style.display = 'none'; return; }
-    const l = localStorage.getItem('viv_sticker_left_url');
-    const r = localStorage.getItem('viv_sticker_right_url');
-    if (l) showSticker(stickerLeft, l);
-    if (r) showSticker(stickerRight, r);
+    if (!stickersEnabled()) {
+      stickerLeftWrap.style.display = 'none';
+      stickerRightWrap.style.display = 'none';
+      return;
+    }
+    const l    = localStorage.getItem('viv_sticker_left_url');
+    const r    = localStorage.getItem('viv_sticker_right_url');
+    const lid  = localStorage.getItem('viv_sticker_left_id')  || localStorage.getItem('viv_sticker_left_id_manual');
+    const rid  = localStorage.getItem('viv_sticker_right_id') || localStorage.getItem('viv_sticker_right_id_manual');
+    if (l) showSticker(stickerLeftWrap,  stickerLeft,  l, lid);
+    if (r) showSticker(stickerRightWrap, stickerRight, r, rid);
   }
 
-  async function fetchAlphaPost(excludeId) {
+  async function fetchAlphaPost(excludeIds = []) {
     const user = localStorage.getItem(K.user), key = localStorage.getItem(K.key);
     if (!user || !key) return null;
     const extra = (localStorage.getItem('viv_sticker_tags') || '').trim();
-    const tags = ['alpha_channel', 'order:random', extra].filter(Boolean).join('+');
+    const tagParts = ['alpha_channel', 'order:random', extra].filter(Boolean);
+    const tagStr = tagParts.map(encodeURIComponent).join('+');
     try {
-      const res = await fetch(`${API}/posts.json?tags=${encodeURIComponent(tags)}&limit=20`, {
+      const res = await fetch(`${API}/posts.json?tags=${tagStr}&limit=20`, {
         headers: { 'User-Agent':'VivaldiStartpage/1.0', 'Authorization':'Basic ' + btoa(user+':'+key) }
       });
       if (!res.ok) return null;
       const data = await res.json();
-      const posts = (data.posts || []).filter(p => p.id !== excludeId && p.file?.url && ['png','gif','webp'].includes(p.file.ext));
-      return posts[0] || null;
+      const valid = (data.posts || []).filter(p => {
+        if (excludeIds.includes(p.id)) return false;
+        const url = p.file?.url || '';
+        const ext = (p.file?.ext || url.split('.').pop() || '').toLowerCase();
+        return ['png','gif','webp'].includes(ext) && url;
+      });
+      return valid[0] || null;
     } catch(e) { return null; }
   }
 
   async function pickStickers() {
-    const postL = await fetchAlphaPost(null);
-    const postR = await fetchAlphaPost(postL?.id);
-    if (postL) {
-      localStorage.setItem('viv_sticker_left_url', postL.file.url);
-      localStorage.setItem('viv_sticker_left_id', postL.id);
+    const manualL = localStorage.getItem('viv_sticker_left_id_manual');
+    const manualR = localStorage.getItem('viv_sticker_right_id_manual');
+    const excludeIds = [];
+
+    // only auto-pick slots that aren't manually set
+    let postL = null, postR = null;
+    if (!manualL) {
+      postL = await fetchAlphaPost(excludeIds);
+      if (postL) {
+        excludeIds.push(postL.id);
+        localStorage.setItem('viv_sticker_left_url', postL.file.url);
+        localStorage.setItem('viv_sticker_left_id', String(postL.id));
+      }
     }
-    if (postR) {
-      localStorage.setItem('viv_sticker_right_url', postR.file.url);
-      localStorage.setItem('viv_sticker_right_id', postR.id);
+    if (!manualR) {
+      postR = await fetchAlphaPost(excludeIds);
+      if (postR) {
+        localStorage.setItem('viv_sticker_right_url', postR.file.url);
+        localStorage.setItem('viv_sticker_right_id', String(postR.id));
+      }
     }
     localStorage.setItem('viv_sticker_day', new Date().toDateString());
     applySavedStickers();
   }
-
   function initStickers() {
     if (!localStorage.getItem('viv_stickers_unlocked')) return;
     if (!stickersEnabled()) return;
@@ -2876,13 +3006,14 @@ No asterisks, no explanation, just the line.`;
     const savedDay = localStorage.getItem('viv_sticker_day');
     const today = new Date().toDateString();
     const autoOn = localStorage.getItem('viv_stickers_auto') !== '0';
-
-    // check if manual IDs are set — those override auto for that slot
     const manualL = localStorage.getItem('viv_sticker_left_id_manual');
     const manualR = localStorage.getItem('viv_sticker_right_id_manual');
 
-    const needNewDay = autoOn && savedDay !== today && !manualL && !manualR;
-    if (needNewDay) { pickStickers(); return; }
+    // pick if: auto is on AND (it's a new day OR at least one slot has no saved URL)
+    const hasLeftUrl  = !!localStorage.getItem('viv_sticker_left_url');
+    const hasRightUrl = !!localStorage.getItem('viv_sticker_right_url');
+    const needsPick = autoOn && (!manualL || !manualR) && (savedDay !== today || !hasLeftUrl || !hasRightUrl);
+    if (needsPick) { pickStickers(); return; }
     applySavedStickers();
   }
 
@@ -2896,8 +3027,11 @@ No asterisks, no explanation, just the line.`;
     document.getElementById('cfg-sticker-left-id').value = li;
     document.getElementById('cfg-sticker-right-id').value = ri;
     document.getElementById('cfg-sticker-tags').value = localStorage.getItem('viv_sticker_tags') || '';
+    document.getElementById('cfg-stickers-sync').checked = stickersSyncEnabled();
     updateStickerAutoUI();
   }
+
+  initStickers();
 
   // settings listeners
   function updateStickerAutoUI() {
@@ -2907,14 +3041,48 @@ No asterisks, no explanation, just the line.`;
 
   document.getElementById('cfg-stickers-on').addEventListener('change', e => {
     localStorage.setItem('viv_stickers_on', e.target.checked ? '1' : '0');
-    if (e.target.checked) initStickers(); else { stickerLeft.style.display = 'none'; stickerRight.style.display = 'none'; }
+    if (e.target.checked) initStickers();
+    else { stickerLeftWrap.style.display = 'none'; stickerRightWrap.style.display = 'none'; }
   });
   document.getElementById('cfg-stickers-auto').addEventListener('change', e => {
     localStorage.setItem('viv_stickers_auto', e.target.checked ? '1' : '0');
     updateStickerAutoUI();
   });
+  document.getElementById('cfg-stickers-sync').addEventListener('change', e => {
+    localStorage.setItem('viv_stickers_sync', e.target.checked ? '1' : '0');
+  });
   document.getElementById('cfg-sticker-tags').addEventListener('change', e => {
     localStorage.setItem('viv_sticker_tags', e.target.value.trim());
+  });
+
+  // sauce buttons
+  document.getElementById('sticker-left-sauce').addEventListener('click', () => {
+    if (stickerLeftPostId) window.open(`https://e621.net/posts/${stickerLeftPostId}`, '_blank');
+  });
+  document.getElementById('sticker-right-sauce').addEventListener('click', () => {
+    if (stickerRightPostId) window.open(`https://e621.net/posts/${stickerRightPostId}`, '_blank');
+  });
+
+  // per-slot refresh buttons
+  document.getElementById('sticker-left-refresh').addEventListener('click', async () => {
+    const post = await fetchAlphaPost(stickerRightPostId ? [stickerRightPostId] : []);
+    if (post) {
+      localStorage.setItem('viv_sticker_left_url', post.file.url);
+      localStorage.setItem('viv_sticker_left_id', String(post.id));
+      localStorage.removeItem('viv_sticker_left_id_manual');
+      document.getElementById('cfg-sticker-left-id').value = '';
+      showSticker(stickerLeftWrap, stickerLeft, post.file.url, String(post.id));
+    }
+  });
+  document.getElementById('sticker-right-refresh').addEventListener('click', async () => {
+    const post = await fetchAlphaPost(stickerLeftPostId ? [stickerLeftPostId] : []);
+    if (post) {
+      localStorage.setItem('viv_sticker_right_url', post.file.url);
+      localStorage.setItem('viv_sticker_right_id', String(post.id));
+      localStorage.removeItem('viv_sticker_right_id_manual');
+      document.getElementById('cfg-sticker-right-id').value = '';
+      showSticker(stickerRightWrap, stickerRight, post.file.url, String(post.id));
+    }
   });
 
   async function resolveManualId(id, slot) {
@@ -2930,7 +3098,11 @@ No asterisks, no explanation, just the line.`;
       if (!url) return;
       localStorage.setItem(`viv_sticker_${slot}_url`, url);
       localStorage.setItem(`viv_sticker_${slot}_id_manual`, id);
-      if (stickersEnabled()) showSticker(slot === 'left' ? stickerLeft : stickerRight, url);
+      if (stickersEnabled()) {
+        const wrap = slot === 'left' ? stickerLeftWrap : stickerRightWrap;
+        const img  = slot === 'left' ? stickerLeft : stickerRight;
+        showSticker(wrap, img, url, id);
+      }
     } catch(e) {}
   }
 
@@ -2952,8 +3124,6 @@ No asterisks, no explanation, just the line.`;
     document.getElementById('cfg-sticker-right-id').value = '';
     pickStickers();
   });
-
-  initStickers();
 
   // ── Hotlinks ──────────────────────────────────────────────────────────────
   function loadHotlinks() { try { return JSON.parse(localStorage.getItem(K.hotlinks) || '[]'); } catch(e) { return []; } }
@@ -2990,8 +3160,7 @@ No asterisks, no explanation, just the line.`;
 
   function renderHotlinks() {
     const links = loadHotlinks();
-    console.log('renderHotlinks called, links:', JSON.stringify(links));
-    const leftEl  = document.getElementById('hotlinks-left');
+      const leftEl  = document.getElementById('hotlinks-left');
     const rightEl = document.getElementById('hotlinks-right');
     leftEl.innerHTML = '';
     rightEl.innerHTML = '';
@@ -2999,7 +3168,7 @@ No asterisks, no explanation, just the line.`;
       const a = document.createElement('a');
       a.className = 'hotlink-btn';
       a.href = link.url;
-      a.target = '_blank';
+      a.target = '_self';
       a.title = link.name || link.url;
       const iconUrl = link.icon || getFavicon(link.url);
       if (iconUrl) {
@@ -3174,7 +3343,6 @@ No asterisks, no explanation, just the line.`;
 
   mobileMenuBtn.addEventListener('click', e => {
     e.stopPropagation();
-    console.log('mobile menu clicked');
     if (mobileDrawer.classList.contains('open')) { closeMobileDrawer(); return; }
     // sync hot button state
     mobHotBtn.classList.toggle('faved', hotBtn.classList.contains('faved'));
@@ -3204,11 +3372,7 @@ No asterisks, no explanation, just the line.`;
   document.getElementById('mob-back-btn').addEventListener('click', () => { closeMobileDrawer(); goBack(); });
   document.getElementById('mob-artist-btn').addEventListener('click', () => { closeMobileDrawer(); moreBtnEl.dispatchEvent(new MouseEvent('click', {bubbles:true})); });
   document.getElementById('mob-settings-btn').addEventListener('click', () => { closeMobileDrawer(); settingsBtn.dispatchEvent(new MouseEvent('click', {bubbles:true})); });
-  renderHotlinks();
-  setTimeout(() => {
-    renderHotlinks();
-    console.log('hotlinks-left children after render:', document.getElementById('hotlinks-left').children.length);
-  }, 2000);
+  setTimeout(renderHotlinks, 300);
 </script>
 </body>
 </html>
