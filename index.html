@@ -447,24 +447,23 @@
   /* hotlinks */
   #hotlinks-left, #hotlinks-right { position:fixed; top:50%; transform:translateY(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; }
 
-  /* stickers */
+  /* stickers — positioned by centre (% of viewport), width in vw, rotation in deg */
   .sticker-wrap {
     position:fixed; z-index:15;
-    max-width:min(22vw, 220px); max-height:min(22vw, 220px);
-    opacity:0; transition:opacity 0.6s ease;
-    transform: rotate(var(--sticker-rot, 0deg));
+    width:calc(var(--sw, 11.5) * 1vw);
+    opacity:0; pointer-events:none; transition:opacity 0.6s ease;
+    transform:translate(-50%,-50%) rotate(var(--sticker-rot, 0deg));
     transform-origin:center center;
+    touch-action:none;
   }
-  .sticker-wrap.loaded { opacity:1; }
-  #sticker-left-wrap  { bottom:80px; left:24px; }
-  #sticker-right-wrap { top:24px; right:24px; }
+  .sticker-wrap.loaded { opacity:1; pointer-events:auto; }
+  #sticker-left-wrap  { left:10%; top:80%; }
+  #sticker-right-wrap { left:90%; top:14%; }
   .sticker {
-    display:block; width:100%; height:100%;
-    max-width:min(22vw, 220px); max-height:min(22vw, 220px);
-    object-fit:contain; filter:drop-shadow(0 4px 16px rgba(0,0,0,0.5));
-    pointer-events:none;
+    display:block; width:100%; height:auto;
+    filter:drop-shadow(0 4px 16px rgba(0,0,0,0.5));
+    pointer-events:none; user-select:none; -webkit-user-drag:none;
   }
-  .sticker-wrap.loaded { pointer-events:auto; }
   .sticker-btn {
     position:absolute; width:26px; height:26px;
     border-radius:999px; border:none; cursor:pointer;
@@ -479,6 +478,31 @@
   .sticker-sauce { top:-10px; right:-10px; }
   .sticker-refresh { bottom:-10px; left:-10px; }
   .sticker-wrap.is-local .sticker-sauce { display:none; }
+
+  /* sticker edit mode */
+  .sticker-handle { position:absolute; display:none; width:18px; height:18px; border-radius:999px; background:#fff; border:2px solid rgba(12,12,12,0.85); box-shadow:0 1px 6px rgba(0,0,0,0.55); touch-action:none; z-index:2; }
+  .sticker-handle-resize { right:-9px; bottom:-9px; cursor:nwse-resize; }
+  .sticker-handle-rotate { left:50%; top:-36px; margin-left:-9px; cursor:grab; }
+  .sticker-handle-rotate::after { content:''; position:absolute; left:50%; top:100%; width:2px; height:16px; margin-left:-1px; background:rgba(255,255,255,0.7); }
+  body.sticker-editing .sticker-wrap { z-index:120; }
+  body.sticker-editing .sticker-wrap.loaded { cursor:move; outline:1.5px dashed rgba(255,255,255,0.75); outline-offset:3px; }
+  body.sticker-editing .sticker-wrap.loaded .sticker-handle { display:block; }
+  body.sticker-editing .sticker-btn { display:none; }
+  body.sticker-editing #ctrl-bar, body.sticker-editing #eye-btn, body.sticker-editing #settings-btn { display:none !important; }
+  #sticker-edit-bar {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:400;
+    display:none; align-items:center; gap:4px; padding:5px;
+    background:rgba(12,12,12,0.55); border:1px solid var(--accent-faint); border-radius:999px;
+    backdrop-filter:blur(24px) saturate(0.8); -webkit-backdrop-filter:blur(24px) saturate(0.8);
+    box-shadow:0 4px 32px rgba(0,0,0,0.4); max-width:calc(100vw - 24px); box-sizing:border-box;
+    font-family:'DM Sans',sans-serif;
+  }
+  body.sticker-editing #sticker-edit-bar { display:flex; }
+  #sticker-edit-hint { font-size:11px; color:var(--accent-dim); padding:0 12px; white-space:nowrap; letter-spacing:0.03em; }
+  .seb-btn { height:36px; padding:0 18px; border-radius:999px; border:none; background:none; color:var(--accent-dim); font-family:inherit; font-size:12px; letter-spacing:0.06em; cursor:pointer; transition:background 0.15s,color 0.15s; }
+  .seb-btn:hover { background:var(--accent-glow); color:var(--accent); }
+  .seb-save { background:var(--accent-glow); color:var(--accent); }
+  @media (max-width:640px) { #sticker-edit-bar { bottom:12px; } #sticker-edit-hint { display:none; } }
   #hotlinks-left { left:22px; }
   #hotlinks-right { right:22px; }
   .hotlink-btn { width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,border-color 0.2s; text-decoration:none; overflow:hidden; position:relative; }
@@ -560,7 +584,10 @@
 <div id="hotlinks-left"></div>
 <div id="hotlinks-right"></div>
 <div id="sticker-left-wrap" class="sticker-wrap" style="display:none;">
-  <img id="sticker-left" class="sticker" alt=""/>
+  <img id="sticker-left" class="sticker" alt="" draggable="false"/>
+  <video id="sticker-left-video" class="sticker" muted loop playsinline autoplay style="display:none;"></video>
+  <span class="sticker-handle sticker-handle-rotate" data-h="rotate" title="Rotate"></span>
+  <span class="sticker-handle sticker-handle-resize" data-h="resize" title="Resize"></span>
   <button class="sticker-btn sticker-sauce" id="sticker-left-sauce" title="Source">
     <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
   </button>
@@ -569,13 +596,23 @@
   </button>
 </div>
 <div id="sticker-right-wrap" class="sticker-wrap" style="display:none;">
-  <img id="sticker-right" class="sticker" alt=""/>
+  <img id="sticker-right" class="sticker" alt="" draggable="false"/>
+  <video id="sticker-right-video" class="sticker" muted loop playsinline autoplay style="display:none;"></video>
+  <span class="sticker-handle sticker-handle-rotate" data-h="rotate" title="Rotate"></span>
+  <span class="sticker-handle sticker-handle-resize" data-h="resize" title="Resize"></span>
   <button class="sticker-btn sticker-sauce" id="sticker-right-sauce" title="Source">
     <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
   </button>
   <button class="sticker-btn sticker-refresh" id="sticker-right-refresh" title="New sticker">
     <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
   </button>
+</div>
+
+<div id="sticker-edit-bar">
+  <span id="sticker-edit-hint">drag to move · corner to resize · top dot to rotate</span>
+  <button class="seb-btn" id="seb-reset" type="button">Reset</button>
+  <button class="seb-btn" id="seb-cancel" type="button">Cancel</button>
+  <button class="seb-btn seb-save" id="seb-save" type="button">Save</button>
 </div>
 
 <div id="hotlink-modal" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;">
@@ -971,11 +1008,12 @@
           <input id="cfg-sticker-right-id" type="text" placeholder="post ID" autocomplete="off" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 10px;outline:none;"/>
         </div>
         <div style="display:flex;gap:8px;">
-          <button id="cfg-sticker-left-upload"  type="button" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px;cursor:pointer;">↑ local image</button>
-          <button id="cfg-sticker-right-upload" type="button" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px;cursor:pointer;">↑ local image</button>
+          <button id="cfg-sticker-left-upload"  type="button" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px;cursor:pointer;">↑ local file</button>
+          <button id="cfg-sticker-right-upload" type="button" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px;cursor:pointer;">↑ local file</button>
         </div>
-        <input id="sticker-file-input" type="file" accept="image/*" style="display:none;"/>
+        <input id="sticker-file-input" type="file" accept="image/*,video/*" style="display:none;"/>
         <button id="cfg-stickers-refresh" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px;cursor:pointer;transition:background 0.15s;">↻ pick new stickers now</button>
+        <button id="cfg-stickers-edit" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px;cursor:pointer;transition:background 0.15s;">✥ edit position, size &amp; rotation</button>
       </div>
     </div>
 
@@ -2799,6 +2837,7 @@ No asterisks, no explanation, just the line.`;
   document.addEventListener('keydown', e => {
     if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
     if (panel.classList.contains('open')) return;
+    if (stickerEditing) return;
     switch(e.key) {
       case 'ArrowRight': case 'l': grossBtn.dispatchEvent(new MouseEvent('click',{bubbles:true})); break;
       case 'ArrowLeft':  case 'j': backBtn.dispatchEvent(new MouseEvent('click',{bubbles:true})); break;
@@ -2927,28 +2966,135 @@ No asterisks, no explanation, just the line.`;
   // track sauce URLs per slot
   let stickerLeftPostId  = null;
   let stickerRightPostId = null;
+  let stickerEditing     = false;
+  const stickerLeftVid   = document.getElementById('sticker-left-video');
+  const stickerRightVid  = document.getElementById('sticker-right-video');
+  const STICKER_DEFAULTS = { left:{x:10,y:80,w:11.5,rot:0}, right:{x:90,y:14,w:11.5,rot:0} };
+  const _stickerObjUrls  = { left:null, right:null };
+  const _stickerToken    = { left:0, right:0 };
+  const _stickerWrapOf   = slot => slot === 'left' ? stickerLeftWrap : stickerRightWrap;
 
   function stickersEnabled() { return localStorage.getItem('viv_stickers_on') === '1'; }
   function stickersSyncEnabled() { return localStorage.getItem('viv_stickers_sync') === '1'; }
 
-  function showSticker(wrap, img, url, postId) {
+  // ── IndexedDB blob store (local sticker files: images, GIFs, videos) ─────────
+  function _stDb() {
+    return new Promise((resolve, reject) => {
+      const r = indexedDB.open('viv_stickers', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('files');
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+  }
+  async function stPut(key, blob) {
+    const db = await _stDb();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('files', 'readwrite');
+      tx.objectStore('files').put(blob, key);
+      tx.oncomplete = () => res();
+      tx.onerror = tx.onabort = () => rej(tx.error);
+    });
+  }
+  async function stGet(key) {
+    const db = await _stDb();
+    return new Promise((res, rej) => {
+      const req = db.transaction('files', 'readonly').objectStore('files').get(key);
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => rej(req.error);
+    });
+  }
+  async function stDel(key) {
+    const db = await _stDb();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('files', 'readwrite');
+      tx.objectStore('files').delete(key);
+      tx.oncomplete = () => res();
+      tx.onerror = tx.onabort = () => rej(tx.error);
+    });
+  }
+  // call before a slot's local file gets replaced by a post / auto pick
+  function _dropLocal(slot) {
+    if (localStorage.getItem(`viv_sticker_${slot}_id_manual`) !== 'local') return;
+    stDel(slot).catch(() => {});
+    localStorage.removeItem(`viv_sticker_${slot}_mime`);
+  }
+
+  function getStickerTf(slot) {
+    try {
+      const t = JSON.parse(localStorage.getItem(`viv_sticker_${slot}_tf`) || 'null');
+      if (t && [t.x, t.y, t.w, t.rot].every(Number.isFinite)) return t;
+    } catch (e) {}
+    return null;
+  }
+  function applyStickerTf(wrap, tf) {
+    wrap.style.left = tf.x + '%';
+    wrap.style.top  = tf.y + '%';
+    wrap.style.setProperty('--sw', tf.w);
+    wrap.style.setProperty('--sticker-rot', tf.rot + 'deg');
+  }
+  function _isVideoSrc(url, mime) {
+    if (mime) return mime.startsWith('video/');
+    if (url.startsWith('data:')) return url.startsWith('data:video/');
+    return /\.(webm|mp4|m4v|mov)(\?|#|$)/i.test(url);
+  }
+  function hideSticker(slot) {
+    _stickerToken[slot]++;
+    _stickerWrapOf(slot).style.display = 'none';
+    const vid = slot === 'left' ? stickerLeftVid : stickerRightVid;
+    try { vid.pause(); } catch (e) {}
+  }
+
+  async function showSticker(wrap, img, url, postId) {
     if (!url) return;
-    const rot = (Math.random() * 20 - 10).toFixed(1);
-    wrap.style.setProperty('--sticker-rot', rot + 'deg');
+    const slot = wrap === stickerLeftWrap ? 'left' : 'right';
+    const vid  = slot === 'left' ? stickerLeftVid : stickerRightVid;
+    const token = ++_stickerToken[slot];
+    if (slot === 'left') stickerLeftPostId = postId; else stickerRightPostId = postId;
+
+    let src = url, mime = null;
+    if (url.startsWith('idb:')) {
+      try {
+        const blob = await stGet(slot);
+        if (token !== _stickerToken[slot]) return;
+        if (!blob) { wrap.style.display = 'none'; return; }
+        if (_stickerObjUrls[slot]) URL.revokeObjectURL(_stickerObjUrls[slot]);
+        src = _stickerObjUrls[slot] = URL.createObjectURL(blob);
+        mime = blob.type || localStorage.getItem(`viv_sticker_${slot}_mime`) || '';
+      } catch (e) { wrap.style.display = 'none'; return; }
+    }
+
+    // saved placement wins; otherwise default spot with a random ±10° tilt
+    let tf = getStickerTf(slot);
+    if (!tf) tf = { ...STICKER_DEFAULTS[slot], rot: +(Math.random() * 20 - 10).toFixed(1) };
+    applyStickerTf(wrap, tf);
+
     wrap.style.display = '';
     wrap.classList.remove('loaded');
     wrap.classList.toggle('is-local', postId === 'local');
-    img.onload = () => wrap.classList.add('loaded');
-    img.onerror = () => wrap.style.display = 'none';
-    img.src = url;
-    if (wrap === stickerLeftWrap)  stickerLeftPostId  = postId;
-    if (wrap === stickerRightWrap) stickerRightPostId = postId;
+
+    const isVid = _isVideoSrc(src, mime);
+    const show = isVid ? vid : img, other = isVid ? img : vid;
+    other.style.display = 'none';
+    if (other === vid) { try { vid.pause(); } catch (e) {} vid.removeAttribute('src'); vid.load(); }
+    else other.removeAttribute('src');
+    show.style.display = '';
+
+    const done = () => { if (token === _stickerToken[slot]) wrap.classList.add('loaded'); };
+    const fail = () => { if (token === _stickerToken[slot]) wrap.style.display = 'none'; };
+    if (isVid) {
+      vid.onloadeddata = done; vid.onerror = fail;
+      vid.muted = true; vid.loop = true; vid.playsInline = true;
+      vid.src = src;
+      const pr = vid.play(); if (pr && pr.catch) pr.catch(() => {});
+    } else {
+      img.onload = done; img.onerror = fail;
+      img.src = src;
+    }
   }
 
   function applySavedStickers() {
     if (!stickersEnabled()) {
-      stickerLeftWrap.style.display = 'none';
-      stickerRightWrap.style.display = 'none';
+      hideSticker('left'); hideSticker('right');
       return;
     }
     const l    = localStorage.getItem('viv_sticker_left_url');
@@ -2975,13 +3121,14 @@ No asterisks, no explanation, just the line.`;
         if (excludeIds.includes(p.id)) return false;
         const url = p.file?.url || '';
         const ext = (p.file?.ext || url.split('.').pop() || '').toLowerCase();
-        return ['png','gif','webp'].includes(ext) && url;
+        return ['png','gif','webp','webm','mp4'].includes(ext) && url;
       });
       return valid[0] || null;
     } catch(e) { return null; }
   }
 
   async function pickStickers() {
+    if (stickerEditing) return;
     const manualL = localStorage.getItem('viv_sticker_left_id_manual');
     const manualR = localStorage.getItem('viv_sticker_right_id_manual');
     const excludeIds = [];
@@ -3051,7 +3198,7 @@ No asterisks, no explanation, just the line.`;
   document.getElementById('cfg-stickers-on').addEventListener('change', e => {
     localStorage.setItem('viv_stickers_on', e.target.checked ? '1' : '0');
     if (e.target.checked) initStickers();
-    else { stickerLeftWrap.style.display = 'none'; stickerRightWrap.style.display = 'none'; }
+    else { hideSticker('left'); hideSticker('right'); }
   });
   document.getElementById('cfg-stickers-auto').addEventListener('change', e => {
     localStorage.setItem('viv_stickers_auto', e.target.checked ? '1' : '0');
@@ -3076,6 +3223,7 @@ No asterisks, no explanation, just the line.`;
   document.getElementById('sticker-left-refresh').addEventListener('click', async () => {
     const post = await fetchAlphaPost(stickerRightPostId && stickerRightPostId !== 'local' ? [Number(stickerRightPostId)] : []);
     if (post) {
+      _dropLocal('left');
       localStorage.setItem('viv_sticker_left_url', post.file.url);
       localStorage.setItem('viv_sticker_left_id', String(post.id));
       localStorage.removeItem('viv_sticker_left_id_manual');
@@ -3086,6 +3234,7 @@ No asterisks, no explanation, just the line.`;
   document.getElementById('sticker-right-refresh').addEventListener('click', async () => {
     const post = await fetchAlphaPost(stickerLeftPostId && stickerLeftPostId !== 'local' ? [Number(stickerLeftPostId)] : []);
     if (post) {
+      _dropLocal('right');
       localStorage.setItem('viv_sticker_right_url', post.file.url);
       localStorage.setItem('viv_sticker_right_id', String(post.id));
       localStorage.removeItem('viv_sticker_right_id_manual');
@@ -3105,6 +3254,7 @@ No asterisks, no explanation, just the line.`;
       const data = await res.json();
       const url = data.post?.file?.url;
       if (!url) return;
+      _dropLocal(slot);
       localStorage.setItem(`viv_sticker_${slot}_url`, url);
       localStorage.setItem(`viv_sticker_${slot}_id_manual`, id);
       if (stickersEnabled()) {
@@ -3118,51 +3268,52 @@ No asterisks, no explanation, just the line.`;
   document.getElementById('cfg-sticker-left-id').addEventListener('change', e => {
     const v = e.target.value.trim();
     if (v) resolveManualId(v, 'left');
-    else { localStorage.removeItem('viv_sticker_left_id_manual'); localStorage.removeItem('viv_sticker_left_url'); stickerLeft.style.display = 'none'; }
+    else { _dropLocal('left'); localStorage.removeItem('viv_sticker_left_id_manual'); localStorage.removeItem('viv_sticker_left_url'); hideSticker('left'); }
   });
   document.getElementById('cfg-sticker-right-id').addEventListener('change', e => {
     const v = e.target.value.trim();
     if (v) resolveManualId(v, 'right');
-    else { localStorage.removeItem('viv_sticker_right_id_manual'); localStorage.removeItem('viv_sticker_right_url'); stickerRight.style.display = 'none'; }
+    else { _dropLocal('right'); localStorage.removeItem('viv_sticker_right_id_manual'); localStorage.removeItem('viv_sticker_right_url'); hideSticker('right'); }
   });
 
-  // ── Local image stickers ──────────────────────────────────────────────────
-  // Stored as data URLs in localStorage (so they survive reloads from file://).
-  // Static images are downscaled to keep within the storage quota; small GIF/WebP
-  // are kept as-is so animation survives.
+  // ── Local sticker files (image / GIF / video) ─────────────────────────────
+  // Stored untouched as Blobs in IndexedDB so animated GIFs/WebP and videos keep
+  // playing. Only very large static PNG/JPEG are downscaled.
+  const STICKER_MAX_BYTES = 40 * 1024 * 1024;
+  const STICKER_MAX_DIM = 1600;
   let _stickerUploadSlot = null;
   const stickerFileInput = document.getElementById('sticker-file-input');
 
-  function _readAsDataURL(file) {
-    return new Promise((resolve, reject) => {
-      const fr = new FileReader();
-      fr.onload = () => resolve(fr.result);
-      fr.onerror = () => reject(fr.error);
-      fr.readAsDataURL(file);
-    });
+  async function _isAnimatedPng(file) {
+    const buf = new Uint8Array(await file.slice(0, 4096).arrayBuffer());
+    for (let i = 0; i < buf.length - 4; i++) if (buf[i]===0x61 && buf[i+1]===0x63 && buf[i+2]===0x54 && buf[i+3]===0x4C) return true; // 'acTL'
+    return false;
   }
 
-  async function _fileToStickerDataUrl(file) {
-    const raw = await _readAsDataURL(file);
-    const animatedCandidate = file.type === 'image/gif' || file.type === 'image/webp' || file.type === 'image/apng';
-    if (animatedCandidate && file.size <= 1.2 * 1024 * 1024) return raw;
-    // downscale (keeps transparency)
-    const img = await new Promise((resolve, reject) => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.onerror = () => reject(new Error('decode failed'));
-      i.src = raw;
-    });
-    const MAX = 512;
-    const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
-    const w = Math.max(1, Math.round(img.naturalWidth * scale));
-    const h = Math.max(1, Math.round(img.naturalHeight * scale));
-    const c = document.createElement('canvas');
-    c.width = w; c.height = h;
-    c.getContext('2d').drawImage(img, 0, 0, w, h);
-    let out = c.toDataURL('image/webp', 0.9);
-    if (!out.startsWith('data:image/webp')) out = c.toDataURL('image/png');
-    return out;
+  async function _prepareStickerBlob(file) {
+    const t = file.type;
+    const downscalable = (t === 'image/png' || t === 'image/jpeg' || t === 'image/bmp');
+    if (!downscalable) return file;                         // gif, webp, avif, svg, video…
+    if (t === 'image/png' && await _isAnimatedPng(file)) return file;
+    const objUrl = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = () => reject(new Error('decode failed'));
+        i.src = objUrl;
+      });
+      const longest = Math.max(img.naturalWidth, img.naturalHeight);
+      if (longest <= STICKER_MAX_DIM) return file;
+      const k = STICKER_MAX_DIM / longest;
+      const c = document.createElement('canvas');
+      c.width  = Math.max(1, Math.round(img.naturalWidth  * k));
+      c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const outType = t === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+      const out = await new Promise(res => c.toBlob(res, outType, 0.92));
+      return out || file;
+    } finally { URL.revokeObjectURL(objUrl); }
   }
 
   document.getElementById('cfg-sticker-left-upload').addEventListener('click',  () => { _stickerUploadSlot = 'left';  stickerFileInput.value = ''; stickerFileInput.click(); });
@@ -3172,33 +3323,120 @@ No asterisks, no explanation, just the line.`;
     const file = stickerFileInput.files && stickerFileInput.files[0];
     const slot = _stickerUploadSlot;
     if (!file || !slot) return;
-    if (!file.type.startsWith('image/')) { showError('That file is not an image'); return; }
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) { showError('That file is not an image or video'); return; }
+    if (file.size > STICKER_MAX_BYTES) { showError('File too large (max 40 MB)'); return; }
     try {
-      const dataUrl = await _fileToStickerDataUrl(file);
-      const prevUrl = localStorage.getItem(`viv_sticker_${slot}_url`);
-      const prevMan = localStorage.getItem(`viv_sticker_${slot}_id_manual`);
-      try {
-        localStorage.setItem(`viv_sticker_${slot}_url`, dataUrl);
-        localStorage.setItem(`viv_sticker_${slot}_id_manual`, 'local');
-      } catch (quotaErr) {
-        // roll back so we don't leave a half-written slot
-        if (prevUrl) localStorage.setItem(`viv_sticker_${slot}_url`, prevUrl); else localStorage.removeItem(`viv_sticker_${slot}_url`);
-        if (prevMan) localStorage.setItem(`viv_sticker_${slot}_id_manual`, prevMan); else localStorage.removeItem(`viv_sticker_${slot}_id_manual`);
-        showError('Image too large to store — try a smaller one');
-        return;
-      }
+      const blob = await _prepareStickerBlob(file);
+      await stPut(slot, blob);
+      localStorage.setItem(`viv_sticker_${slot}_url`, 'idb:' + slot);
+      localStorage.setItem(`viv_sticker_${slot}_mime`, blob.type || file.type);
+      localStorage.setItem(`viv_sticker_${slot}_id_manual`, 'local');
       document.getElementById(`cfg-sticker-${slot}-id`).value = '';
       if (stickersEnabled()) {
-        const wrap = slot === 'left' ? stickerLeftWrap : stickerRightWrap;
-        const img  = slot === 'left' ? stickerLeft : stickerRight;
-        showSticker(wrap, img, dataUrl, 'local');
+        showSticker(_stickerWrapOf(slot), slot === 'left' ? stickerLeft : stickerRight, 'idb:' + slot, 'local');
       }
     } catch (e) {
-      showError('Could not load that image');
+      showError('Could not save that file');
     }
   });
 
+  // ── Sticker edit mode: drag / resize / rotate ─────────────────────────────
+  const _clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  let _editTf = {}, _editBackup = {}, _drag = null;
+
+  function _readLiveTf(slot) {
+    const w = _stickerWrapOf(slot);
+    return {
+      x:   parseFloat(w.style.left) || STICKER_DEFAULTS[slot].x,
+      y:   parseFloat(w.style.top)  || STICKER_DEFAULTS[slot].y,
+      w:   parseFloat(w.style.getPropertyValue('--sw')) || STICKER_DEFAULTS[slot].w,
+      rot: parseFloat(w.style.getPropertyValue('--sticker-rot')) || 0
+    };
+  }
+
+  function enterStickerEdit() {
+    if (!stickersEnabled()) { showError('Turn on "Show stickers" first'); return; }
+    const slots = ['left', 'right'].filter(s => {
+      const w = _stickerWrapOf(s);
+      return w.style.display !== 'none' && w.classList.contains('loaded');
+    });
+    if (!slots.length) { showError('No stickers to edit yet'); return; }
+    closeSettings();
+    _editTf = {}; _editBackup = {};
+    slots.forEach(s => { _editTf[s] = _readLiveTf(s); _editBackup[s] = { ..._editTf[s] }; });
+    stickerEditing = true;
+    document.body.classList.add('sticker-editing');
+  }
+
+  function exitStickerEdit(save) {
+    if (!stickerEditing) return;
+    stickerEditing = false;
+    _drag = null;
+    document.body.classList.remove('sticker-editing');
+    Object.keys(_editTf).forEach(s => {
+      if (save) localStorage.setItem(`viv_sticker_${s}_tf`, JSON.stringify(_editTf[s]));
+      else applyStickerTf(_stickerWrapOf(s), _editBackup[s]);
+    });
+  }
+
+  ['left', 'right'].forEach(slot => {
+    const wrap = _stickerWrapOf(slot);
+    wrap.addEventListener('pointerdown', e => {
+      if (!stickerEditing || !_editTf[slot] || (e.button !== undefined && e.button > 0)) return;
+      e.preventDefault();
+      const mode = e.target.closest('.sticker-handle')?.dataset.h || 'move';
+      const r = wrap.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      _drag = { wrap, slot, mode, sx: e.clientX, sy: e.clientY, cx, cy, tf0: { ..._editTf[slot] },
+                d0: Math.hypot(e.clientX - cx, e.clientY - cy) || 1,
+                a0: Math.atan2(e.clientY - cy, e.clientX - cx) };
+      try { wrap.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    wrap.addEventListener('pointermove', e => {
+      if (!_drag || _drag.wrap !== wrap) return;
+      const d = _drag, tf = _editTf[slot];
+      if (d.mode === 'move') {
+        tf.x = +_clamp(d.tf0.x + (e.clientX - d.sx) / innerWidth  * 100, 0, 100).toFixed(2);
+        tf.y = +_clamp(d.tf0.y + (e.clientY - d.sy) / innerHeight * 100, 0, 100).toFixed(2);
+      } else if (d.mode === 'resize') {
+        tf.w = +_clamp(d.tf0.w * Math.hypot(e.clientX - d.cx, e.clientY - d.cy) / d.d0, 2, 80).toFixed(2);
+      } else {
+        let rot = d.tf0.rot + (Math.atan2(e.clientY - d.cy, e.clientX - d.cx) - d.a0) * 180 / Math.PI;
+        if (e.shiftKey) rot = Math.round(rot / 15) * 15;
+        else { const snap = Math.round(rot / 90) * 90; if (Math.abs(rot - snap) < 3) rot = snap; }
+        tf.rot = +(((rot + 180) % 360 + 360) % 360 - 180).toFixed(1);
+      }
+      applyStickerTf(wrap, tf);
+    });
+    const end = e => {
+      if (_drag && _drag.wrap === wrap) { _drag = null; try { wrap.releasePointerCapture(e.pointerId); } catch (_) {} }
+    };
+    wrap.addEventListener('pointerup', end);
+    wrap.addEventListener('pointercancel', end);
+    // scroll wheel resizes while editing
+    wrap.addEventListener('wheel', e => {
+      if (!stickerEditing || !_editTf[slot]) return;
+      e.preventDefault();
+      const tf = _editTf[slot];
+      tf.w = +_clamp(tf.w * (e.deltaY < 0 ? 1.06 : 1 / 1.06), 2, 80).toFixed(2);
+      applyStickerTf(wrap, tf);
+    }, { passive: false });
+  });
+
+  document.getElementById('cfg-stickers-edit').addEventListener('click', enterStickerEdit);
+  document.getElementById('seb-save').addEventListener('click', () => exitStickerEdit(true));
+  document.getElementById('seb-cancel').addEventListener('click', () => exitStickerEdit(false));
+  document.getElementById('seb-reset').addEventListener('click', () => {
+    Object.keys(_editTf).forEach(s => { _editTf[s] = { ...STICKER_DEFAULTS[s] }; applyStickerTf(_stickerWrapOf(s), _editTf[s]); });
+  });
+  document.addEventListener('keydown', e => {
+    if (!stickerEditing) return;
+    if (e.key === 'Escape') exitStickerEdit(false);
+    else if (e.key === 'Enter') exitStickerEdit(true);
+  });
+
   document.getElementById('cfg-stickers-refresh').addEventListener('click', () => {
+    _dropLocal('left'); _dropLocal('right');
     localStorage.removeItem('viv_sticker_left_id_manual'); localStorage.removeItem('viv_sticker_right_id_manual');
     localStorage.removeItem('viv_sticker_left_url'); localStorage.removeItem('viv_sticker_right_url');
     document.getElementById('cfg-sticker-left-id').value = '';
