@@ -478,6 +478,7 @@
   .sticker-wrap:hover .sticker-btn { opacity:1; }
   .sticker-sauce { top:-10px; right:-10px; }
   .sticker-refresh { bottom:-10px; left:-10px; }
+  .sticker-wrap.is-local .sticker-sauce { display:none; }
   #hotlinks-left { left:22px; }
   #hotlinks-right { right:22px; }
   .hotlink-btn { width:36px; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:background 0.2s,border-color 0.2s; text-decoration:none; overflow:hidden; position:relative; }
@@ -969,6 +970,11 @@
           <input id="cfg-sticker-left-id"  type="text" placeholder="post ID" autocomplete="off" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 10px;outline:none;"/>
           <input id="cfg-sticker-right-id" type="text" placeholder="post ID" autocomplete="off" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.8);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 10px;outline:none;"/>
         </div>
+        <div style="display:flex;gap:8px;">
+          <button id="cfg-sticker-left-upload"  type="button" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px;cursor:pointer;">↑ local image</button>
+          <button id="cfg-sticker-right-upload" type="button" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px;cursor:pointer;">↑ local image</button>
+        </div>
+        <input id="sticker-file-input" type="file" accept="image/*" style="display:none;"/>
         <button id="cfg-stickers-refresh" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px;cursor:pointer;transition:background 0.15s;">↻ pick new stickers now</button>
       </div>
     </div>
@@ -2931,6 +2937,7 @@ No asterisks, no explanation, just the line.`;
     wrap.style.setProperty('--sticker-rot', rot + 'deg');
     wrap.style.display = '';
     wrap.classList.remove('loaded');
+    wrap.classList.toggle('is-local', postId === 'local');
     img.onload = () => wrap.classList.add('loaded');
     img.onerror = () => wrap.style.display = 'none';
     img.src = url;
@@ -2946,8 +2953,8 @@ No asterisks, no explanation, just the line.`;
     }
     const l    = localStorage.getItem('viv_sticker_left_url');
     const r    = localStorage.getItem('viv_sticker_right_url');
-    const lid  = localStorage.getItem('viv_sticker_left_id')  || localStorage.getItem('viv_sticker_left_id_manual');
-    const rid  = localStorage.getItem('viv_sticker_right_id') || localStorage.getItem('viv_sticker_right_id_manual');
+    const lid  = localStorage.getItem('viv_sticker_left_id_manual')  || localStorage.getItem('viv_sticker_left_id');
+    const rid  = localStorage.getItem('viv_sticker_right_id_manual') || localStorage.getItem('viv_sticker_right_id');
     if (l) showSticker(stickerLeftWrap,  stickerLeft,  l, lid);
     if (r) showSticker(stickerRightWrap, stickerRight, r, rid);
   }
@@ -3022,8 +3029,10 @@ No asterisks, no explanation, just the line.`;
     document.getElementById('cfg-stickers-section').style.display = 'flex';
     document.getElementById('cfg-stickers-on').checked = stickersEnabled();
     document.getElementById('cfg-stickers-auto').checked = localStorage.getItem('viv_stickers_auto') !== '0';
-    const li = localStorage.getItem('viv_sticker_left_id_manual') || '';
-    const ri = localStorage.getItem('viv_sticker_right_id_manual') || '';
+    let li = localStorage.getItem('viv_sticker_left_id_manual') || '';
+    let ri = localStorage.getItem('viv_sticker_right_id_manual') || '';
+    if (li === 'local') li = '';
+    if (ri === 'local') ri = '';
     document.getElementById('cfg-sticker-left-id').value = li;
     document.getElementById('cfg-sticker-right-id').value = ri;
     document.getElementById('cfg-sticker-tags').value = localStorage.getItem('viv_sticker_tags') || '';
@@ -3065,7 +3074,7 @@ No asterisks, no explanation, just the line.`;
 
   // per-slot refresh buttons
   document.getElementById('sticker-left-refresh').addEventListener('click', async () => {
-    const post = await fetchAlphaPost(stickerRightPostId ? [stickerRightPostId] : []);
+    const post = await fetchAlphaPost(stickerRightPostId && stickerRightPostId !== 'local' ? [Number(stickerRightPostId)] : []);
     if (post) {
       localStorage.setItem('viv_sticker_left_url', post.file.url);
       localStorage.setItem('viv_sticker_left_id', String(post.id));
@@ -3075,7 +3084,7 @@ No asterisks, no explanation, just the line.`;
     }
   });
   document.getElementById('sticker-right-refresh').addEventListener('click', async () => {
-    const post = await fetchAlphaPost(stickerLeftPostId ? [stickerLeftPostId] : []);
+    const post = await fetchAlphaPost(stickerLeftPostId && stickerLeftPostId !== 'local' ? [Number(stickerLeftPostId)] : []);
     if (post) {
       localStorage.setItem('viv_sticker_right_url', post.file.url);
       localStorage.setItem('viv_sticker_right_id', String(post.id));
@@ -3115,6 +3124,78 @@ No asterisks, no explanation, just the line.`;
     const v = e.target.value.trim();
     if (v) resolveManualId(v, 'right');
     else { localStorage.removeItem('viv_sticker_right_id_manual'); localStorage.removeItem('viv_sticker_right_url'); stickerRight.style.display = 'none'; }
+  });
+
+  // ── Local image stickers ──────────────────────────────────────────────────
+  // Stored as data URLs in localStorage (so they survive reloads from file://).
+  // Static images are downscaled to keep within the storage quota; small GIF/WebP
+  // are kept as-is so animation survives.
+  let _stickerUploadSlot = null;
+  const stickerFileInput = document.getElementById('sticker-file-input');
+
+  function _readAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = () => reject(fr.error);
+      fr.readAsDataURL(file);
+    });
+  }
+
+  async function _fileToStickerDataUrl(file) {
+    const raw = await _readAsDataURL(file);
+    const animatedCandidate = file.type === 'image/gif' || file.type === 'image/webp' || file.type === 'image/apng';
+    if (animatedCandidate && file.size <= 1.2 * 1024 * 1024) return raw;
+    // downscale (keeps transparency)
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error('decode failed'));
+      i.src = raw;
+    });
+    const MAX = 512;
+    const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    let out = c.toDataURL('image/webp', 0.9);
+    if (!out.startsWith('data:image/webp')) out = c.toDataURL('image/png');
+    return out;
+  }
+
+  document.getElementById('cfg-sticker-left-upload').addEventListener('click',  () => { _stickerUploadSlot = 'left';  stickerFileInput.value = ''; stickerFileInput.click(); });
+  document.getElementById('cfg-sticker-right-upload').addEventListener('click', () => { _stickerUploadSlot = 'right'; stickerFileInput.value = ''; stickerFileInput.click(); });
+
+  stickerFileInput.addEventListener('change', async () => {
+    const file = stickerFileInput.files && stickerFileInput.files[0];
+    const slot = _stickerUploadSlot;
+    if (!file || !slot) return;
+    if (!file.type.startsWith('image/')) { showError('That file is not an image'); return; }
+    try {
+      const dataUrl = await _fileToStickerDataUrl(file);
+      const prevUrl = localStorage.getItem(`viv_sticker_${slot}_url`);
+      const prevMan = localStorage.getItem(`viv_sticker_${slot}_id_manual`);
+      try {
+        localStorage.setItem(`viv_sticker_${slot}_url`, dataUrl);
+        localStorage.setItem(`viv_sticker_${slot}_id_manual`, 'local');
+      } catch (quotaErr) {
+        // roll back so we don't leave a half-written slot
+        if (prevUrl) localStorage.setItem(`viv_sticker_${slot}_url`, prevUrl); else localStorage.removeItem(`viv_sticker_${slot}_url`);
+        if (prevMan) localStorage.setItem(`viv_sticker_${slot}_id_manual`, prevMan); else localStorage.removeItem(`viv_sticker_${slot}_id_manual`);
+        showError('Image too large to store — try a smaller one');
+        return;
+      }
+      document.getElementById(`cfg-sticker-${slot}-id`).value = '';
+      if (stickersEnabled()) {
+        const wrap = slot === 'left' ? stickerLeftWrap : stickerRightWrap;
+        const img  = slot === 'left' ? stickerLeft : stickerRight;
+        showSticker(wrap, img, dataUrl, 'local');
+      }
+    } catch (e) {
+      showError('Could not load that image');
+    }
   });
 
   document.getElementById('cfg-stickers-refresh').addEventListener('click', () => {
