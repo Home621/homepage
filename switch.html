@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<meta charset="UTF-8"><title>Switching…</title>
+<script>
+// Hidden toggle. /switch.html flips between the two looks; ?to=new or ?to=classic sets one explicitly.
+try {
+  var want = new URLSearchParams(location.search).get('to');
+  var now = localStorage.getItem('viv_theme') === 'new' ? 'new' : 'classic';
+  var next = want === 'new' || want === 'classic' ? want : (now === 'new' ? 'classic' : 'new');
+  localStorage.setItem('viv_theme', next);
+} catch (e) {}
+location.replace('index.html');
+</script>
