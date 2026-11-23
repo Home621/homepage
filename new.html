@@ -3065,6 +3065,12 @@ No asterisks, no explanation, just the line.`;
   }
 
   const SECRET_CODES = {
+    '083cf7471af73c5eaaec5ceecbe928db63118a7a39c961a8a42689c5050feeb8': { icon: '<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M15 5l4 4"/>', label: 'Edit insult prompt', action: () => {
+      const first = !localStorage.getItem('viv_prompt_unlocked');
+      localStorage.setItem('viv_prompt_unlocked', '1');
+      document.getElementById('cfg-prompt-section').style.display = 'flex';
+      return first;
+    }},
     '89e8b9518d92279489bbdee26f3dc646d921d89a15afbd3a3e0ad695328a3da0': { icon: '<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>', label: 'Camera wallpaper', action: () => {
       const unlocked = localStorage.getItem('viv_cam_unlocked') === '1';
       if (unlocked) {
@@ -3112,7 +3118,7 @@ No asterisks, no explanation, just the line.`;
       document.querySelector('.src-opt[data-src="inkbunny"]').style.display = '';
       return true;
     }},
-    '0e2aad61c72169e5ab0027c6e929385886832d0155d1c06470094c7e0859e21f': { icon: '<rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/>', label: 'Unlock all', action: () => {
+    '7aec9402a089a1aea94de69796cd8938ff7ef1341681dad743ee4592f76c3e49': { icon: '<rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/>', label: 'Unlock all', action: () => {
       // camera
       document.getElementById('camera-src-opt').style.display = '';
       localStorage.setItem('viv_cam_unlocked', '1');
